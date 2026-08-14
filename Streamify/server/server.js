@@ -8,7 +8,12 @@ import dns from "dns";
 
 const app = express();
 
-app.use(cors());
+app.use(
+  cors({
+    origin: process.env.FRONTEND_URL,
+    credentials: true,
+  })
+);
 app.use(express.json());
 app.use("/api/users", userRoutes);
 app.use("/api/watchlist", watchlistRoutes);
@@ -26,8 +31,9 @@ mongoose
     console.error("MongoDB connection failed:", err);
   });
 
-app.listen(8080, ()=>{
-    console.log("Streamify server is running...");
-    
+const PORT = process.env.PORT || 8080;
+
+app.listen(PORT, "0.0.0.0", () => {
+  console.log(`Server running on port ${PORT}`);
 });
 
