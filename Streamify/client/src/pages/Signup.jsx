@@ -48,6 +48,7 @@ export default function Signup() {
       
       await axios.post(`${import.meta.env.VITE_API_URL}/api/users`, {
               firebaseUid: userCredential.user.uid,
+              name,
               email: userCredential.user.email,
             });
 
