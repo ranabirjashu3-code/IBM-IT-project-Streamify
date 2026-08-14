@@ -5,7 +5,7 @@ import BackgroundImage from "../components/BackgroundImage";
 import Header from "../components/Header";
 import logo from "../assets/logo.png";
 import { createUserWithEmailAndPassword, sendEmailVerification, signOut, reload, onAuthStateChanged } from "firebase/auth"
-import { firebaseAuth } from "../utils/firebase-config";
+import { firebaseAuth } from "../Utils/firebase-config";
 import { useNavigate } from "react-router-dom";
 import axios from "axios";
 

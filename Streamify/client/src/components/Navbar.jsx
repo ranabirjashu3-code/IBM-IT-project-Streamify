@@ -5,7 +5,7 @@ import logo from "../assets/logo.png";
 import { FaPowerOff, FaSearch } from "react-icons/fa";
 import { Link, useNavigate } from "react-router-dom";
 import { signOut } from "firebase/auth";
-import { firebaseAuth } from "../utils/firebase-config";
+import { firebaseAuth } from "../Utils/firebase-config";
 
 export default function Navbar({ isScrolled }) {
   const links = [

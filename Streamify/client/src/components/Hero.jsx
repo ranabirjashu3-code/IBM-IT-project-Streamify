@@ -6,8 +6,8 @@ import { AiOutlinePlus } from "react-icons/ai";
 import { BsCheck } from "react-icons/bs";
 import axios from "axios";
 import { toast } from "react-toastify";
-import { firebaseAuth } from "../utils/firebase-config";
-import { requireAuth } from "../utils/requireAuth";
+import { firebaseAuth } from "../Utils/firebase-config";
+import { requireAuth } from "../Utils/requireAuth";
 
 export default function Hero({ items = [] }) {
     const navigate = useNavigate();

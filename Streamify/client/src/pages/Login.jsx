@@ -4,7 +4,7 @@ import styled from "styled-components";
 import BackgroundImage from "../components/BackgroundImage";
 import Header from "../components/Header";
 import { signInWithEmailAndPassword, reload, signOut, onAuthStateChanged } from "firebase/auth"
-import { firebaseAuth } from "../utils/firebase-config";
+import { firebaseAuth } from "../Utils/firebase-config";
 import { Link, useNavigate, useLocation } from "react-router-dom";
 
 
