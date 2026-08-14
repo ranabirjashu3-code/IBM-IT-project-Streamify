@@ -5,14 +5,35 @@ const router = express.Router();
 
 router.post("/", async (req, res) => {
   try {
-    const { firebaseUid, name, email, profileImage, bio } = req.body;
+    const {
+      firebaseUid,
+      name,
+      email,
+      profileImage,
+      bio,
+    } = req.body;
 
-    const existingUser = await User.findOne({ firebaseUid });
+    console.log("Received user:", {
+      firebaseUid,
+      name,
+      email,
+    });
+
+    // Check Firebase UID
+    let existingUser = await User.findOne({ firebaseUid });
 
     if (existingUser) {
       return res.status(200).json(existingUser);
     }
 
+    // Check email
+    existingUser = await User.findOne({ email });
+
+    if (existingUser) {
+      return res.status(200).json(existingUser);
+    }
+
+    // Create new user
     const user = await User.create({
       firebaseUid,
       name,
@@ -21,13 +42,14 @@ router.post("/", async (req, res) => {
       bio,
     });
 
-    res.status(201).json(user);
+    return res.status(201).json(user);
 
   } catch (error) {
-    console.error("User creation error:", error);
+    console.error("USER CREATION ERROR:", error);
 
-    res.status(500).json({
+    return res.status(500).json({
       message: "Failed to create user",
+      error: error.message,
     });
   }
 });
