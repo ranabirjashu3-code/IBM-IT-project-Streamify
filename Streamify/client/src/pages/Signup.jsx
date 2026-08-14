@@ -3,6 +3,7 @@ import { toast } from "react-toastify";
 import styled from "styled-components";
 import BackgroundImage from "../components/BackgroundImage";
 import Header from "../components/Header";
+import logo from "../assets/logo.png";
 import { createUserWithEmailAndPassword, sendEmailVerification, signOut, reload, onAuthStateChanged } from "firebase/auth"
 import { firebaseAuth } from "../utils/firebase-config";
 import { useNavigate } from "react-router-dom";
@@ -92,6 +93,9 @@ export default function Signup() {
   return (
     <Container>
     <BackgroundImage />
+     <div className="logo">
+            <img src={logo} alt="logo" />
+          </div>
       <div className="body">
         <div className="text">
           <h1>Unlimited Entertainment, All in One Place</h1>
@@ -159,6 +163,25 @@ const Container = styled.div`
   min-height: 100vh;
   position: relative;
   overflow-x: hidden;
+
+  .logo {
+    position: absolute;
+    top: 25px;
+    left: 40px;
+
+    z-index: 10;
+
+    display: flex;
+    align-items: center;
+  }
+
+  .logo img {
+    width: 170px;
+    height: auto;
+
+    display: block;
+    object-fit: contain;
+  }
 
   .body {
     position: relative;
@@ -246,6 +269,15 @@ const Container = styled.div`
   }
 
   @media (max-width: 768px) {
+    .logo {
+      top: 20px;
+      left: 20px;
+    }
+
+    .logo img {
+      width: 130px;
+    }
+
     .text {
       h1 {
         font-size: 2.5rem;
