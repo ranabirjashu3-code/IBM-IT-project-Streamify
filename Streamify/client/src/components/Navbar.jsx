@@ -88,6 +88,10 @@ const Container = styled.div`
   position: relative;
   z-index: 9999;
 
+  /* =========================================
+     NAVBAR
+  ========================================= */
+
   nav {
     position: fixed;
     top: 0;
@@ -96,13 +100,16 @@ const Container = styled.div`
     width: 100%;
     height: 72px;
 
-    padding: 0 3rem;
+    padding: 0 clamp(1rem, 4vw, 3rem);
 
     display: flex;
     align-items: center;
     justify-content: space-between;
 
+    box-sizing: border-box;
+
     background: rgba(10, 10, 10, 0.75);
+
     backdrop-filter: blur(12px);
     -webkit-backdrop-filter: blur(12px);
 
@@ -113,20 +120,32 @@ const Container = styled.div`
 
   nav.scrolled {
     background: rgba(20, 20, 20, 0.96);
-    box-shadow: 0 3px 15px rgba(0, 0, 0, 0.5);
+
+    box-shadow:
+      0 3px 15px rgba(0, 0, 0, 0.5);
   }
 
-  /* LEFT */
+  /* =========================================
+     LEFT SIDE
+  ========================================= */
+
   .left {
     display: flex;
     align-items: center;
+
     height: 100%;
-    gap: 2.5rem;
+
+    gap: clamp(1rem, 2.5vw, 2.5rem);
+
+    min-width: 0;
   }
 
-  /* LOGO */
+  /* =========================================
+     LOGO
+  ========================================= */
+
   .brand {
-    width: 120px;
+    width: clamp(80px, 8vw, 120px);
     height: 60px;
 
     display: flex;
@@ -134,14 +153,16 @@ const Container = styled.div`
     justify-content: center;
 
     overflow: hidden;
+
     flex-shrink: 0;
   }
 
   .brand img {
     display: block;
 
-    width: 115px;
-    height: 58px;
+    width: clamp(78px, 7.7vw, 115px);
+    height: auto;
+    max-height: 58px;
 
     object-fit: contain;
     object-position: center;
@@ -155,17 +176,22 @@ const Container = styled.div`
     transform: scale(1.04);
   }
 
-  /* NAV LINKS */
+  /* =========================================
+     NAVIGATION LINKS
+  ========================================= */
+
   .links {
     display: flex;
     align-items: center;
 
-    gap: 2rem;
+    gap: clamp(0.8rem, 2vw, 2rem);
 
     margin: 0;
     padding: 0;
 
     list-style: none;
+
+    min-width: 0;
   }
 
   .links li {
@@ -180,7 +206,7 @@ const Container = styled.div`
 
     text-decoration: none;
 
-    font-size: 1rem;
+    font-size: clamp(0.82rem, 1vw, 1rem);
     font-weight: 600;
 
     white-space: nowrap;
@@ -212,16 +238,22 @@ const Container = styled.div`
     width: 100%;
   }
 
-  /* RIGHT */
+  /* =========================================
+     RIGHT SIDE
+  ========================================= */
+
   .right {
     display: flex;
     align-items: center;
-    gap: 0.7rem;
+
+    gap: clamp(0.25rem, 0.7vw, 0.7rem);
+
+    flex-shrink: 0;
   }
 
   .right > button {
-    width: 40px;
-    height: 40px;
+    width: clamp(34px, 3vw, 40px);
+    height: clamp(34px, 3vw, 40px);
 
     display: flex;
     align-items: center;
@@ -236,7 +268,7 @@ const Container = styled.div`
 
     color: white;
 
-    font-size: 1.15rem;
+    font-size: clamp(0.95rem, 1.2vw, 1.15rem);
 
     cursor: pointer;
 
@@ -248,7 +280,10 @@ const Container = styled.div`
     color: #46d369;
   }
 
-  /* SEARCH */
+  /* =========================================
+     SEARCH
+  ========================================= */
+
   .search {
     display: flex;
     align-items: center;
@@ -270,7 +305,7 @@ const Container = styled.div`
   }
 
   .search.show-search {
-    width: 230px;
+    width: clamp(150px, 20vw, 230px);
 
     background: rgba(0, 0, 0, 0.75);
 
@@ -290,13 +325,16 @@ const Container = styled.div`
 
     color: white;
 
-    font-size: 0.9rem;
+    font-size: clamp(0.8rem, 1vw, 0.9rem);
 
     transition: width 0.3s ease;
+
+    min-width: 0;
   }
 
   .search.show-search input {
     width: 100%;
+
     padding: 0 10px;
   }
 
@@ -316,19 +354,43 @@ const Container = styled.div`
     border: none;
 
     background: transparent;
+
     color: white;
 
     cursor: pointer;
+
+    flex-shrink: 0;
   }
 
   .search button:hover {
     background: rgba(255, 255, 255, 0.1);
   }
 
-  /* TABLET */
-  @media (max-width: 1024px) {
+  /* =========================================
+     LARGE DESKTOP
+  ========================================= */
+
+  @media (min-width: 1440px) {
     nav {
-      padding: 0 1.5rem;
+      height: 76px;
+    }
+
+    .links {
+      gap: 2.3rem;
+    }
+
+    .links a {
+      font-size: 1.05rem;
+    }
+  }
+
+  /* =========================================
+     LAPTOP
+  ========================================= */
+
+  @media (max-width: 1200px) {
+    nav {
+      padding: 0 2rem;
     }
 
     .left {
@@ -338,47 +400,205 @@ const Container = styled.div`
     .links {
       gap: 1.2rem;
     }
+  }
 
-    .brand {
-      width: 105px;
+  /* =========================================
+     TABLET
+  ========================================= */
+
+  @media (max-width: 1024px) {
+    nav {
+      height: 68px;
+
+      padding: 0 1.5rem;
     }
 
-    .brand img {
+    .brand {
       width: 100px;
     }
 
+    .brand img {
+      width: 96px;
+    }
+
+    .left {
+      gap: 1.2rem;
+    }
+
+    .links {
+      gap: 0.9rem;
+    }
+
     .links a {
-      font-size: 0.9rem;
+      font-size: 0.85rem;
+    }
+
+    .search.show-search {
+      width: 190px;
     }
   }
 
-  /* MOBILE */
-  @media (max-width: 768px) {
+  /* =========================================
+     SMALL TABLET
+  ========================================= */
+
+  @media (max-width: 850px) {
     nav {
-      height: 62px;
-      padding: 0 1rem;
+      padding: 0 1.2rem;
+    }
+
+    .left {
+      gap: 0.8rem;
+    }
+
+    .links {
+      gap: 0.65rem;
+    }
+
+    .links a {
+      font-size: 0.78rem;
     }
 
     .brand {
       width: 90px;
-      height: 52px;
     }
 
     .brand img {
       width: 88px;
-      height: 48px;
     }
+  }
+
+  /* =========================================
+     MOBILE
+  ========================================= */
+
+  @media (max-width: 768px) {
+    nav {
+      height: 62px;
+
+      padding: 0 0.9rem;
+    }
+
+    .brand {
+      width: 88px;
+      height: 52px;
+    }
+
+    .brand img {
+      width: 86px;
+      max-height: 48px;
+    }
+
+    /*
+      Hide desktop navigation.
+      You can replace this with a hamburger menu
+      if you have one.
+    */
 
     .links {
       display: none;
     }
 
     .right {
-      gap: 0.3rem;
+      gap: 0.25rem;
+    }
+
+    .right > button {
+      width: 36px;
+      height: 36px;
     }
 
     .search.show-search {
-      width: 180px;
+      width: min(52vw, 200px);
+    }
+
+    .search {
+      height: 36px;
+    }
+
+    .search button {
+      width: 36px;
+      min-width: 36px;
+      height: 36px;
+    }
+  }
+
+  /* =========================================
+     SMALL MOBILE
+  ========================================= */
+
+  @media (max-width: 480px) {
+    nav {
+      height: 58px;
+
+      padding: 0 0.65rem;
+    }
+
+    .brand {
+      width: 78px;
+      height: 48px;
+    }
+
+    .brand img {
+      width: 76px;
+      max-height: 44px;
+    }
+
+    .right {
+      gap: 0.15rem;
+    }
+
+    .right > button {
+      width: 34px;
+      height: 34px;
+    }
+
+    .search.show-search {
+      width: 48vw;
+      max-width: 170px;
+    }
+
+    .search input {
+      font-size: 0.78rem;
+    }
+
+    .search button {
+      width: 34px;
+      min-width: 34px;
+      height: 34px;
+    }
+  }
+
+  /* =========================================
+     VERY SMALL PHONES
+  ========================================= */
+
+  @media (max-width: 360px) {
+    nav {
+      padding: 0 0.45rem;
+    }
+
+    .brand {
+      width: 70px;
+    }
+
+    .brand img {
+      width: 68px;
+    }
+
+    .right > button {
+      width: 32px;
+      height: 32px;
+    }
+
+    .search.show-search {
+      width: 45vw;
+      max-width: 145px;
+    }
+
+    .search button {
+      width: 32px;
+      min-width: 32px;
     }
   }
 `;
