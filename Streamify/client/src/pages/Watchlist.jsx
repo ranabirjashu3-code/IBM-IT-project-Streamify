@@ -45,9 +45,9 @@ export default function Watchlist() {
         if (!user) return;
 
         try {
-               await axios.delete(
-                    `${import.meta.env.VITE_API_URL}/api/watchlist/${firebaseUid}/${movieId}/movie`
-                );
+            await axios.delete(
+                `${import.meta.env.VITE_API_URL}/api/watchlist/${user.uid}/${movie.movieId}/${movie.mediaType}`
+            );
 
             setWatchlist((prev) =>
                 prev.filter(
@@ -90,7 +90,7 @@ export default function Watchlist() {
 
                     <button onClick={() => {
                         if (!requireAuth(navigate)) return;
-                        navigate("/")
+                         navigate("/")
                     }}>
                         Browse Movies
                     </button>
