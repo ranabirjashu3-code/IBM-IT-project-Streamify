@@ -88,9 +88,9 @@ const Container = styled.div`
   position: relative;
   z-index: 9999;
 
-  /* =========================================
+  /* =====================================================
      NAVBAR
-  ========================================= */
+  ===================================================== */
 
   nav {
     position: fixed;
@@ -100,34 +100,42 @@ const Container = styled.div`
     width: 100%;
     height: 72px;
 
-    padding: 0 clamp(1rem, 4vw, 3rem);
-
     display: flex;
     align-items: center;
-    justify-content: space-between;
+
+    padding: 0 clamp(16px, 3vw, 48px);
 
     box-sizing: border-box;
 
-    background: rgba(10, 10, 10, 0.75);
+    background: rgba(10, 10, 10, 0.82);
 
-    backdrop-filter: blur(12px);
-    -webkit-backdrop-filter: blur(12px);
+    backdrop-filter: blur(16px);
+    -webkit-backdrop-filter: blur(16px);
 
-    transition: all 0.3s ease;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.06);
 
     z-index: 9999;
+
+    transition:
+      background 0.3s ease,
+      box-shadow 0.3s ease,
+      height 0.3s ease;
   }
+
+  /* =====================================================
+     SCROLLED NAVBAR
+  ===================================================== */
 
   nav.scrolled {
-    background: rgba(20, 20, 20, 0.96);
+    background: rgba(10, 10, 10, 0.96);
 
     box-shadow:
-      0 3px 15px rgba(0, 0, 0, 0.5);
+      0 4px 25px rgba(0, 0, 0, 0.45);
   }
 
-  /* =========================================
-     LEFT
-  ========================================= */
+  /* =====================================================
+     LEFT SECTION
+  ===================================================== */
 
   .left {
     display: flex;
@@ -135,68 +143,73 @@ const Container = styled.div`
 
     height: 100%;
 
-    gap: clamp(1rem, 2.5vw, 2.5rem);
+    gap: clamp(18px, 2.5vw, 40px);
+
+    flex: 1 1 auto;
 
     min-width: 0;
-
-    flex-shrink: 0;
   }
 
-  /* =========================================
+  /* =====================================================
      LOGO
-  ========================================= */
+  ===================================================== */
 
   .brand {
-    width: clamp(80px, 8vw, 120px);
-    height: 60px;
+    width: clamp(82px, 8vw, 120px);
+    height: 100%;
 
     display: flex;
     align-items: center;
     justify-content: center;
 
-    overflow: hidden;
-
     flex-shrink: 0;
+
+    overflow: hidden;
   }
 
   .brand img {
     display: block;
 
-    width: clamp(78px, 7.7vw, 115px);
-    height: auto;
-
+    width: clamp(78px, 7.5vw, 115px);
     max-height: 58px;
+
+    height: auto;
 
     object-fit: contain;
     object-position: center;
 
     cursor: pointer;
 
-    transition: transform 0.25s ease;
+    transition:
+      transform 0.25s ease,
+      opacity 0.25s ease;
   }
 
   .brand img:hover {
     transform: scale(1.04);
+    opacity: 0.95;
   }
 
-  /* =========================================
+  /* =====================================================
      NAVIGATION LINKS
-  ========================================= */
+  ===================================================== */
 
   .links {
     display: flex;
     align-items: center;
 
-    gap: clamp(0.8rem, 2vw, 2rem);
+    gap: clamp(14px, 1.8vw, 32px);
 
     margin: 0;
     padding: 0;
 
     list-style: none;
 
-    min-width: 0;
+    white-space: nowrap;
 
-    flex-shrink: 0;
+    flex: 0 1 auto;
+
+    min-width: 0;
   }
 
   .links li {
@@ -209,22 +222,33 @@ const Container = styled.div`
   .links a {
     position: relative;
 
-    color: #ddd;
+    display: inline-flex;
+    align-items: center;
+
+    color: rgba(255, 255, 255, 0.78);
 
     text-decoration: none;
 
-    font-size: clamp(0.82rem, 1vw, 1rem);
+    font-size: clamp(13px, 1vw, 16px);
 
     font-weight: 600;
 
+    line-height: 1;
+
     white-space: nowrap;
 
-    transition: color 0.25s ease;
+    padding: 10px 0;
+
+    transition:
+      color 0.25s ease,
+      transform 0.25s ease;
   }
 
   .links a:hover {
-    color: #fff;
+    color: #ffffff;
   }
+
+  /* Active / hover underline */
 
   .links a::after {
     content: "";
@@ -232,10 +256,12 @@ const Container = styled.div`
     position: absolute;
 
     left: 0;
-    bottom: -7px;
+    bottom: 1px;
 
     width: 0;
     height: 2px;
+
+    border-radius: 10px;
 
     background: #46d369;
 
@@ -246,24 +272,28 @@ const Container = styled.div`
     width: 100%;
   }
 
-  /* =========================================
-     RIGHT
-  ========================================= */
+  /* =====================================================
+     RIGHT SECTION
+  ===================================================== */
 
   .right {
     display: flex;
     align-items: center;
 
-    gap: clamp(0.25rem, 0.7vw, 0.7rem);
+    gap: 8px;
 
     flex-shrink: 0;
 
-    margin-left: auto;
+    margin-left: clamp(16px, 2vw, 32px);
   }
 
+  /* =====================================================
+     RIGHT ICON BUTTONS
+  ===================================================== */
+
   .right > button {
-    width: clamp(34px, 3vw, 40px);
-    height: clamp(34px, 3vw, 40px);
+    width: 40px;
+    height: 40px;
 
     display: flex;
     align-items: center;
@@ -276,26 +306,31 @@ const Container = styled.div`
 
     background: transparent;
 
-    color: white;
+    color: rgba(255, 255, 255, 0.9);
 
-    font-size: clamp(0.95rem, 1.2vw, 1.15rem);
+    font-size: 18px;
 
     cursor: pointer;
 
-    transition: all 0.25s ease;
-
     flex-shrink: 0;
+
+    transition:
+      background 0.25s ease,
+      color 0.25s ease,
+      transform 0.25s ease;
   }
 
   .right > button:hover {
     background: rgba(255, 255, 255, 0.1);
 
     color: #46d369;
+
+    transform: scale(1.05);
   }
 
-  /* =========================================
+  /* =====================================================
      SEARCH
-  ========================================= */
+  ===================================================== */
 
   .search {
     display: flex;
@@ -307,29 +342,36 @@ const Container = styled.div`
     overflow: hidden;
 
     border: 1px solid transparent;
-    border-radius: 5px;
+
+    border-radius: 6px;
 
     background: transparent;
+
+    flex-shrink: 0;
 
     transition:
       width 0.3s ease,
       background 0.3s ease,
-      border-color 0.3s ease;
-
-    flex-shrink: 0;
+      border-color 0.3s ease,
+      box-shadow 0.3s ease;
   }
 
   .search.show-search {
-    width: clamp(150px, 20vw, 230px);
+    width: clamp(170px, 18vw, 240px);
 
     background: rgba(0, 0, 0, 0.75);
 
-    border-color: rgba(255, 255, 255, 0.35);
+    border-color: rgba(255, 255, 255, 0.2);
+
+    box-shadow:
+      0 4px 15px rgba(0, 0, 0, 0.25);
   }
 
   .search input {
     width: 0;
     height: 100%;
+
+    min-width: 0;
 
     padding: 0;
 
@@ -338,13 +380,13 @@ const Container = styled.div`
 
     background: transparent;
 
-    color: white;
+    color: #ffffff;
 
-    font-size: clamp(0.8rem, 1vw, 0.9rem);
+    font-size: 14px;
 
-    transition: width 0.3s ease;
-
-    min-width: 0;
+    transition:
+      width 0.3s ease,
+      padding 0.3s ease;
   }
 
   .search.show-search input {
@@ -354,7 +396,7 @@ const Container = styled.div`
   }
 
   .search input::placeholder {
-    color: rgba(255, 255, 255, 0.6);
+    color: rgba(255, 255, 255, 0.55);
   }
 
   .search button {
@@ -366,24 +408,33 @@ const Container = styled.div`
     align-items: center;
     justify-content: center;
 
+    padding: 0;
+
     border: none;
 
     background: transparent;
 
-    color: white;
+    color: #ffffff;
 
     cursor: pointer;
 
     flex-shrink: 0;
+
+    transition:
+      background 0.25s ease,
+      color 0.25s ease;
   }
 
   .search button:hover {
-    background: rgba(255, 255, 255, 0.1);
+    background: rgba(255, 255, 255, 0.08);
+
+    color: #46d369;
   }
 
-  /* =========================================
+  /* =====================================================
      LARGE DESKTOP
-  ========================================= */
+     1440px+
+  ===================================================== */
 
   @media (min-width: 1440px) {
     nav {
@@ -391,239 +442,266 @@ const Container = styled.div`
     }
 
     .links {
-      gap: 2.3rem;
+      gap: 34px;
     }
 
     .links a {
-      font-size: 1.05rem;
+      font-size: 16px;
+    }
+
+    .right {
+      gap: 10px;
     }
   }
 
-  /* =========================================
-     LAPTOP
-  ========================================= */
+  /* =====================================================
+     DESKTOP / LAPTOP
+     1200px
+  ===================================================== */
 
   @media (max-width: 1200px) {
     nav {
-      padding: 0 2rem;
+      padding: 0 28px;
     }
 
     .left {
-      gap: 1.5rem;
+      gap: 24px;
     }
 
     .links {
-      gap: 1.2rem;
-    }
-  }
-
-  /* =========================================
-     TABLET
-  ========================================= */
-
-  @media (max-width: 1024px) {
-    nav {
-      height: 68px;
-
-      padding: 0 1.2rem;
-
-      /*
-        Allow the navbar content to scroll
-        horizontally if necessary.
-      */
-      overflow-x: auto;
-      overflow-y: hidden;
-
-      justify-content: flex-start;
-    }
-
-    nav::-webkit-scrollbar {
-      display: none;
-    }
-
-    nav {
-      scrollbar-width: none;
-    }
-
-    .brand {
-      width: 100px;
-    }
-
-    .brand img {
-      width: 96px;
-    }
-
-    .left {
-      gap: 1.2rem;
-    }
-
-    .links {
-      gap: 0.9rem;
+      gap: 20px;
     }
 
     .links a {
-      font-size: 0.85rem;
+      font-size: 14px;
     }
 
     .search.show-search {
-      width: 190px;
+      width: 200px;
     }
   }
 
-  /* =========================================
-     SMALL TABLET
-  ========================================= */
+  /* =====================================================
+     TABLET
+     1024px
+  ===================================================== */
 
-  @media (max-width: 850px) {
+  @media (max-width: 1024px) {
     nav {
-      padding: 0 1rem;
+      height: 66px;
+
+      padding: 0 20px;
     }
 
     .left {
-      gap: 0.8rem;
-    }
-
-    .links {
-      gap: 0.65rem;
-    }
-
-    .links a {
-      font-size: 0.78rem;
+      gap: 18px;
     }
 
     .brand {
-      width: 90px;
+      width: 92px;
     }
 
     .brand img {
       width: 88px;
     }
 
+    .links {
+      gap: 14px;
+    }
+
+    .links a {
+      font-size: 13px;
+    }
+
     .right {
-      gap: 0.3rem;
+      gap: 5px;
+
+      margin-left: 16px;
+    }
+
+    .right > button {
+      width: 36px;
+      height: 36px;
+
+      font-size: 16px;
+    }
+
+    .search.show-search {
+      width: 170px;
     }
   }
 
-  /* =========================================
+  /* =====================================================
+     SMALL TABLET
+     850px
+  ===================================================== */
+
+  @media (max-width: 850px) {
+    nav {
+      padding: 0 14px;
+    }
+
+    .left {
+      gap: 14px;
+    }
+
+    .brand {
+      width: 78px;
+    }
+
+    .brand img {
+      width: 76px;
+    }
+
+    .links {
+      gap: 11px;
+    }
+
+    .links a {
+      font-size: 12px;
+    }
+
+    .right {
+      margin-left: 12px;
+    }
+
+    .search.show-search {
+      width: 150px;
+    }
+  }
+
+  /* =====================================================
      MOBILE
-  ========================================= */
+     768px
+  ===================================================== */
 
   @media (max-width: 768px) {
     nav {
-      height: 62px;
+      height: 60px;
 
-      padding: 0 0.8rem;
+      padding: 0 12px;
 
+      /*
+        Keep everything accessible.
+        The navbar can scroll horizontally if needed.
+      */
       overflow-x: auto;
       overflow-y: hidden;
 
       justify-content: flex-start;
+
+      -webkit-overflow-scrolling: touch;
+
+      scrollbar-width: none;
     }
 
     nav::-webkit-scrollbar {
       display: none;
     }
 
-    nav {
-      scrollbar-width: none;
+    .left {
+      flex: 0 0 auto;
+
+      gap: 12px;
     }
 
     .brand {
-      width: 82px;
-      height: 52px;
+      width: 76px;
+      height: 54px;
     }
 
     .brand img {
-      width: 80px;
-      max-height: 48px;
+      width: 74px;
+      max-height: 46px;
     }
-
-    /*
-      IMPORTANT:
-      Links stay visible on mobile.
-    */
 
     .links {
       display: flex;
 
-      gap: 0.65rem;
+      gap: 12px;
 
-      flex-shrink: 0;
+      flex: 0 0 auto;
     }
 
     .links a {
-      font-size: 0.72rem;
+      font-size: 12px;
+
+      padding: 8px 0;
     }
 
     .right {
-      gap: 0.25rem;
+      flex: 0 0 auto;
 
-      margin-left: 1rem;
+      margin-left: 14px;
 
-      flex-shrink: 0;
+      gap: 4px;
     }
 
     .right > button {
       width: 34px;
       height: 34px;
+
+      font-size: 15px;
     }
 
     .search {
-      width: 36px;
-      height: 36px;
+      width: 34px;
+      height: 34px;
     }
 
     .search.show-search {
-      width: 160px;
+      width: 145px;
     }
 
     .search button {
-      width: 36px;
-      min-width: 36px;
-      height: 36px;
+      width: 34px;
+      min-width: 34px;
+      height: 34px;
     }
   }
 
-  /* =========================================
-     SMALL MOBILE
-  ========================================= */
+  /* =====================================================
+     MOBILE
+     600px
+  ===================================================== */
 
-  @media (max-width: 480px) {
+  @media (max-width: 600px) {
     nav {
-      height: 58px;
-
-      padding: 0 0.6rem;
-    }
-
-    .brand {
-      width: 70px;
-      height: 48px;
-    }
-
-    .brand img {
-      width: 68px;
-      max-height: 44px;
+      padding: 0 10px;
     }
 
     .left {
-      gap: 0.5rem;
+      gap: 10px;
+    }
+
+    .brand {
+      width: 68px;
+    }
+
+    .brand img {
+      width: 66px;
     }
 
     .links {
-      gap: 0.5rem;
+      gap: 10px;
     }
 
     .links a {
-      font-size: 0.65rem;
+      font-size: 11px;
     }
 
     .right {
-      gap: 0.15rem;
-
-      margin-left: 0.7rem;
+      margin-left: 12px;
     }
 
     .right > button {
+      width: 32px;
+      height: 32px;
+
+      font-size: 14px;
+    }
+
+    .search {
       width: 32px;
       height: 32px;
     }
@@ -632,60 +710,134 @@ const Container = styled.div`
       width: 130px;
     }
 
-    .search input {
-      font-size: 0.75rem;
-    }
-
     .search button {
       width: 32px;
       min-width: 32px;
-      height: 34px;
+      height: 32px;
     }
   }
 
-  /* =========================================
-     VERY SMALL PHONES
-  ========================================= */
+  /* =====================================================
+     SMALL MOBILE
+     480px
+  ===================================================== */
 
-  @media (max-width: 360px) {
+  @media (max-width: 480px) {
     nav {
-      padding: 0 0.4rem;
+      height: 56px;
+
+      padding: 0 8px;
+    }
+
+    .left {
+      gap: 8px;
     }
 
     .brand {
       width: 62px;
+      height: 50px;
     }
 
     .brand img {
       width: 60px;
+      max-height: 42px;
     }
 
     .links {
-      gap: 0.4rem;
+      gap: 9px;
     }
 
     .links a {
-      font-size: 0.6rem;
+      font-size: 10.5px;
     }
 
     .right {
-      margin-left: 0.5rem;
+      margin-left: 10px;
+
+      gap: 3px;
     }
 
     .right > button {
       width: 30px;
       height: 30px;
 
-      font-size: 0.85rem;
+      font-size: 13px;
+    }
+
+    .search {
+      width: 30px;
+      height: 30px;
     }
 
     .search.show-search {
-      width: 115px;
+      width: 120px;
     }
 
     .search button {
       width: 30px;
       min-width: 30px;
+      height: 30px;
+    }
+
+    .search input {
+      font-size: 12px;
+    }
+  }
+
+  /* =====================================================
+     VERY SMALL PHONES
+     360px
+  ===================================================== */
+
+  @media (max-width: 360px) {
+    nav {
+      padding: 0 6px;
+    }
+
+    .left {
+      gap: 7px;
+    }
+
+    .brand {
+      width: 56px;
+    }
+
+    .brand img {
+      width: 54px;
+    }
+
+    .links {
+      gap: 8px;
+    }
+
+    .links a {
+      font-size: 10px;
+    }
+
+    .right {
+      margin-left: 8px;
+    }
+
+    .right > button {
+      width: 28px;
+      height: 28px;
+
+      font-size: 12px;
+    }
+
+    .search {
+      width: 28px;
+      height: 28px;
+    }
+
+    .search.show-search {
+      width: 110px;
+    }
+
+    .search button {
+      width: 28px;
+      min-width: 28px;
+      height: 28px;
     }
   }
 `;
