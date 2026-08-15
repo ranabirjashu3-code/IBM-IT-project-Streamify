@@ -27,7 +27,7 @@ export default React.memo(function Card({ movieData, isLiked = false }) {
       // REMOVE
       if (isInWatchlist) {
         await axios.delete(
-          `http://localhost:8080/api/watchlist/${user.uid}/${movieData.id}/${movieData.mediaType}`
+          `${import.meta.env.VITE_API_URL}/api/watchlist/${user.uid}/${movieData.id}/${movieData.mediaType}`
         );
 
         setIsInWatchlist(false);
