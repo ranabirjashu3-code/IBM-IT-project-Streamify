@@ -126,7 +126,7 @@ const Container = styled.div`
   }
 
   /* =========================================
-     LEFT SIDE
+     LEFT
   ========================================= */
 
   .left {
@@ -138,6 +138,8 @@ const Container = styled.div`
     gap: clamp(1rem, 2.5vw, 2.5rem);
 
     min-width: 0;
+
+    flex-shrink: 0;
   }
 
   /* =========================================
@@ -162,6 +164,7 @@ const Container = styled.div`
 
     width: clamp(78px, 7.7vw, 115px);
     height: auto;
+
     max-height: 58px;
 
     object-fit: contain;
@@ -192,11 +195,15 @@ const Container = styled.div`
     list-style: none;
 
     min-width: 0;
+
+    flex-shrink: 0;
   }
 
   .links li {
     display: flex;
     align-items: center;
+
+    flex-shrink: 0;
   }
 
   .links a {
@@ -207,6 +214,7 @@ const Container = styled.div`
     text-decoration: none;
 
     font-size: clamp(0.82rem, 1vw, 1rem);
+
     font-weight: 600;
 
     white-space: nowrap;
@@ -239,7 +247,7 @@ const Container = styled.div`
   }
 
   /* =========================================
-     RIGHT SIDE
+     RIGHT
   ========================================= */
 
   .right {
@@ -249,6 +257,8 @@ const Container = styled.div`
     gap: clamp(0.25rem, 0.7vw, 0.7rem);
 
     flex-shrink: 0;
+
+    margin-left: auto;
   }
 
   .right > button {
@@ -273,10 +283,13 @@ const Container = styled.div`
     cursor: pointer;
 
     transition: all 0.25s ease;
+
+    flex-shrink: 0;
   }
 
   .right > button:hover {
     background: rgba(255, 255, 255, 0.1);
+
     color: #46d369;
   }
 
@@ -302,6 +315,8 @@ const Container = styled.div`
       width 0.3s ease,
       background 0.3s ease,
       border-color 0.3s ease;
+
+    flex-shrink: 0;
   }
 
   .search.show-search {
@@ -410,7 +425,24 @@ const Container = styled.div`
     nav {
       height: 68px;
 
-      padding: 0 1.5rem;
+      padding: 0 1.2rem;
+
+      /*
+        Allow the navbar content to scroll
+        horizontally if necessary.
+      */
+      overflow-x: auto;
+      overflow-y: hidden;
+
+      justify-content: flex-start;
+    }
+
+    nav::-webkit-scrollbar {
+      display: none;
+    }
+
+    nav {
+      scrollbar-width: none;
     }
 
     .brand {
@@ -444,7 +476,7 @@ const Container = styled.div`
 
   @media (max-width: 850px) {
     nav {
-      padding: 0 1.2rem;
+      padding: 0 1rem;
     }
 
     .left {
@@ -466,6 +498,10 @@ const Container = styled.div`
     .brand img {
       width: 88px;
     }
+
+    .right {
+      gap: 0.3rem;
+    }
   }
 
   /* =========================================
@@ -476,44 +512,69 @@ const Container = styled.div`
     nav {
       height: 62px;
 
-      padding: 0 0.9rem;
+      padding: 0 0.8rem;
+
+      overflow-x: auto;
+      overflow-y: hidden;
+
+      justify-content: flex-start;
+    }
+
+    nav::-webkit-scrollbar {
+      display: none;
+    }
+
+    nav {
+      scrollbar-width: none;
     }
 
     .brand {
-      width: 88px;
+      width: 82px;
       height: 52px;
     }
 
     .brand img {
-      width: 86px;
+      width: 80px;
       max-height: 48px;
     }
 
     /*
-      Hide desktop navigation.
-      You can replace this with a hamburger menu
-      if you have one.
+      IMPORTANT:
+      Links stay visible on mobile.
     */
 
     .links {
-      display: none;
+      display: flex;
+
+      gap: 0.65rem;
+
+      flex-shrink: 0;
+    }
+
+    .links a {
+      font-size: 0.72rem;
     }
 
     .right {
       gap: 0.25rem;
+
+      margin-left: 1rem;
+
+      flex-shrink: 0;
     }
 
     .right > button {
+      width: 34px;
+      height: 34px;
+    }
+
+    .search {
       width: 36px;
       height: 36px;
     }
 
     .search.show-search {
-      width: min(52vw, 200px);
-    }
-
-    .search {
-      height: 36px;
+      width: 160px;
     }
 
     .search button {
@@ -531,40 +592,53 @@ const Container = styled.div`
     nav {
       height: 58px;
 
-      padding: 0 0.65rem;
+      padding: 0 0.6rem;
     }
 
     .brand {
-      width: 78px;
+      width: 70px;
       height: 48px;
     }
 
     .brand img {
-      width: 76px;
+      width: 68px;
       max-height: 44px;
+    }
+
+    .left {
+      gap: 0.5rem;
+    }
+
+    .links {
+      gap: 0.5rem;
+    }
+
+    .links a {
+      font-size: 0.65rem;
     }
 
     .right {
       gap: 0.15rem;
+
+      margin-left: 0.7rem;
     }
 
     .right > button {
-      width: 34px;
-      height: 34px;
+      width: 32px;
+      height: 32px;
     }
 
     .search.show-search {
-      width: 48vw;
-      max-width: 170px;
+      width: 130px;
     }
 
     .search input {
-      font-size: 0.78rem;
+      font-size: 0.75rem;
     }
 
     .search button {
-      width: 34px;
-      min-width: 34px;
+      width: 32px;
+      min-width: 32px;
       height: 34px;
     }
   }
@@ -575,30 +649,43 @@ const Container = styled.div`
 
   @media (max-width: 360px) {
     nav {
-      padding: 0 0.45rem;
+      padding: 0 0.4rem;
     }
 
     .brand {
-      width: 70px;
+      width: 62px;
     }
 
     .brand img {
-      width: 68px;
+      width: 60px;
+    }
+
+    .links {
+      gap: 0.4rem;
+    }
+
+    .links a {
+      font-size: 0.6rem;
+    }
+
+    .right {
+      margin-left: 0.5rem;
     }
 
     .right > button {
-      width: 32px;
-      height: 32px;
+      width: 30px;
+      height: 30px;
+
+      font-size: 0.85rem;
     }
 
     .search.show-search {
-      width: 45vw;
-      max-width: 145px;
+      width: 115px;
     }
 
     .search button {
-      width: 32px;
-      min-width: 32px;
+      width: 30px;
+      min-width: 30px;
     }
   }
 `;
