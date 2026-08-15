@@ -150,141 +150,665 @@ export default function Watchlist() {
 
 
 const Container = styled.div`
+  width: 100%;
   min-height: 100vh;
-  background: #141414;
-  color: white;
-  padding: 100px 5rem 50px;
-`;
 
-const Header = styled.div`
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  margin-bottom: 2rem;
+  box-sizing: border-box;
 
-  h1 {
-    font-size: 2rem;
-  }
+  padding: 100px clamp(20px, 4vw, 60px) 50px;
 
-  button {
-    background: white;
-    color: black;
-    border: none;
-    padding: 0.7rem 1.3rem;
-    border-radius: 5px;
-    cursor: pointer;
-    font-weight: 600;
-  }
-`;
+  background: #0b0b0b;
 
-const Grid = styled.div`
-  display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(180px, 1fr));
-  gap: 1.5rem;
-`;
+  color: #ffffff;
 
-const Card = styled.div`
-  background: #181818;
-  border-radius: 8px;
-  overflow: hidden;
-  transition: transform 0.25s ease;
+  overflow-x: hidden;
 
-  &:hover {
-    transform: scale(1.04);
-  }
+  /* =====================================================
+     HEADER
+  ===================================================== */
 
-  img {
+  ${Header} {
     width: 100%;
-    height: 270px;
-    object-fit: cover;
+    max-width: 1800px;
+
+    margin: 0 auto 35px;
+
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+
+    gap: 20px;
+  }
+
+  ${Header} h1 {
+    margin: 0;
+
+    color: #ffffff;
+
+    font-size: clamp(1.7rem, 3vw, 2.8rem);
+
+    font-weight: 800;
+
+    line-height: 1.2;
+  }
+
+  ${Header} button {
+    padding: 10px 18px;
+
+    border: 1px solid rgba(255, 255, 255, 0.15);
+
+    border-radius: 7px;
+
+    background: rgba(255, 255, 255, 0.08);
+
+    color: #ffffff;
+
+    font-size: 0.9rem;
+
+    font-weight: 600;
+
+    cursor: pointer;
+
+    white-space: nowrap;
+
+    transition:
+      background 0.25s ease,
+      border-color 0.25s ease,
+      transform 0.2s ease;
+  }
+
+  ${Header} button:hover {
+    background: #46d369;
+
+    border-color: #46d369;
+
+    color: #000000;
+
+    transform: translateY(-2px);
+  }
+
+  /* =====================================================
+     GRID
+  ===================================================== */
+
+  ${Grid} {
+    width: 100%;
+    max-width: 1800px;
+
+    margin: 0 auto;
+
+    display: grid;
+
+    grid-template-columns: repeat(
+      auto-fill,
+      minmax(220px, 1fr)
+    );
+
+    gap: clamp(18px, 2vw, 30px);
+  }
+
+  /* =====================================================
+     MOVIE CARD
+  ===================================================== */
+
+  ${Card} {
+    width: 100%;
+
+    min-width: 0;
+
+    overflow: hidden;
+
+    background: #151515;
+
+    border: 1px solid rgba(255, 255, 255, 0.06);
+
+    border-radius: 12px;
+
+    box-shadow:
+      0 8px 25px rgba(0, 0, 0, 0.35);
+
+    transition:
+      transform 0.3s ease,
+      box-shadow 0.3s ease,
+      border-color 0.3s ease;
+  }
+
+  ${Card}:hover {
+    transform: translateY(-7px);
+
+    border-color: rgba(70, 211, 105, 0.3);
+
+    box-shadow:
+      0 15px 40px rgba(0, 0, 0, 0.6);
+  }
+
+  /* =====================================================
+     POSTER
+  ===================================================== */
+
+  ${Card} > img {
     display: block;
+
+    width: 100%;
+
+    aspect-ratio: 2 / 3;
+
+    object-fit: cover;
+
+    background: #1a1a1a;
+
+    transition: transform 0.4s ease;
   }
 
-  .info {
-    padding: 1rem;
+  ${Card}:hover > img {
+    transform: scale(1.025);
   }
 
-  h3 {
-    margin: 0 0 0.6rem;
-    font-size: 1rem;
-  }
+  /* =====================================================
+     CARD INFO
+  ===================================================== */
 
-  .meta {
+  ${Card} .info {
     display: flex;
-    gap: 0.6rem;
-    color: #aaa;
+
+    flex-direction: column;
+
+    gap: 11px;
+
+    padding: 15px;
+  }
+
+  ${Card} .info h3 {
+    margin: 0;
+
+    color: #ffffff;
+
+    font-size: clamp(0.95rem, 1.2vw, 1.15rem);
+
+    font-weight: 700;
+
+    line-height: 1.3;
+
+    display: -webkit-box;
+
+    -webkit-line-clamp: 2;
+
+    -webkit-box-orient: vertical;
+
+    overflow: hidden;
+  }
+
+  /* =====================================================
+     META
+  ===================================================== */
+
+  ${Card} .meta {
+    display: flex;
+
+    align-items: center;
+
+    flex-wrap: wrap;
+
+    gap: 8px;
+
+    color: rgba(255, 255, 255, 0.65);
+
     font-size: 0.8rem;
-    margin-bottom: 0.7rem;
   }
 
-  .meta span:first-child {
-    color: #46d369;
+  ${Card} .meta span {
+    display: inline-flex;
+
+    align-items: center;
+
+    white-space: nowrap;
   }
 
-  p {
-    color: #bbb;
+  /* =====================================================
+     DESCRIPTION
+  ===================================================== */
+
+  ${Card} .info p {
+    margin: 0;
+
+    color: rgba(255, 255, 255, 0.58);
+
     font-size: 0.85rem;
-    line-height: 1.4;
-    margin-bottom: 1rem;
+
+    line-height: 1.5;
+
+    display: -webkit-box;
+
+    -webkit-line-clamp: 3;
+
+    -webkit-box-orient: vertical;
+
+    overflow: hidden;
   }
 
-  .buttons {
+  /* =====================================================
+     BUTTONS
+  ===================================================== */
+
+  ${Card} .buttons {
     display: flex;
-    gap: 0.5rem;
+
+    gap: 8px;
+
+    width: 100%;
+
+    margin-top: auto;
   }
 
-  button {
+  ${Card} .buttons button {
+    flex: 1;
+
+    min-width: 0;
+
+    min-height: 38px;
+
+    padding: 8px 10px;
+
     border: none;
-    border-radius: 4px;
-    padding: 0.5rem 0.7rem;
+
+    border-radius: 6px;
+
+    background: #46d369;
+
+    color: #000000;
+
+    font-size: 0.82rem;
+
+    font-weight: 700;
+
     cursor: pointer;
-    font-weight: 600;
+
+    transition:
+      background 0.25s ease,
+      transform 0.2s ease;
   }
 
-  button:first-child {
-    background: white;
-    color: black;
+  ${Card} .buttons button:hover {
+    background: #5ee27c;
+
+    transform: translateY(-1px);
   }
 
-  .remove {
-    background: #333;
-    color: white;
+  ${Card} .buttons button.remove {
+    background: rgba(255, 255, 255, 0.1);
+
+    color: #ffffff;
+
+    border: 1px solid rgba(255, 255, 255, 0.12);
   }
 
-  .remove:hover {
-    background: #555;
-  }
-`;
+  ${Card} .buttons button.remove:hover {
+    background: #e50914;
 
-const Empty = styled.div`
-  text-align: center;
-  padding: 8rem 1rem;
+    border-color: #e50914;
 
-  h2 {
-    font-size: 1.8rem;
+    color: #ffffff;
   }
 
-  p {
-    color: #aaa;
-    margin-bottom: 2rem;
+  /* =====================================================
+     EMPTY WATCHLIST
+  ===================================================== */
+
+  ${Empty} {
+    min-height: 55vh;
+
+    width: 100%;
+
+    display: flex;
+
+    flex-direction: column;
+
+    align-items: center;
+
+    justify-content: center;
+
+    text-align: center;
+
+    padding: 30px 15px;
+
+    box-sizing: border-box;
   }
 
-  button {
-    background: white;
+  ${Empty} h2 {
+    margin: 0 0 12px;
+
+    color: #ffffff;
+
+    font-size: clamp(1.4rem, 3vw, 2.2rem);
+
+    font-weight: 700;
+  }
+
+  ${Empty} p {
+    max-width: 550px;
+
+    margin: 0 0 25px;
+
+    color: rgba(255, 255, 255, 0.6);
+
+    font-size: clamp(0.85rem, 1.3vw, 1rem);
+
+    line-height: 1.6;
+  }
+
+  ${Empty} button {
+    padding: 11px 22px;
+
     border: none;
-    padding: 0.8rem 1.5rem;
-    border-radius: 5px;
-    font-weight: 600;
-    cursor: pointer;
-  }
-`;
 
-const Message = styled.div`
-  min-height: 100vh;
-  background: #141414;
-  color: white;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  font-size: 1.2rem;
+    border-radius: 7px;
+
+    background: #46d369;
+
+    color: #000000;
+
+    font-size: 0.9rem;
+
+    font-weight: 700;
+
+    cursor: pointer;
+
+    transition:
+      background 0.25s ease,
+      transform 0.2s ease;
+  }
+
+  ${Empty} button:hover {
+    background: #5ee27c;
+
+    transform: translateY(-2px);
+  }
+
+  /* =====================================================
+     LARGE DESKTOP
+     1600px+
+  ===================================================== */
+
+  @media (min-width: 1600px) {
+    padding-top: 115px;
+
+    ${Grid} {
+      grid-template-columns: repeat(
+        auto-fill,
+        minmax(230px, 1fr)
+      );
+
+      gap: 30px;
+    }
+  }
+
+  /* =====================================================
+     DESKTOP
+     1200px - 1599px
+  ===================================================== */
+
+  @media (max-width: 1400px) {
+    ${Grid} {
+      grid-template-columns: repeat(
+        5,
+        minmax(0, 1fr)
+      );
+
+      gap: 22px;
+    }
+  }
+
+  /* =====================================================
+     LAPTOP
+     1024px - 1199px
+  ===================================================== */
+
+  @media (max-width: 1200px) {
+    padding-left: 30px;
+    padding-right: 30px;
+
+    ${Grid} {
+      grid-template-columns: repeat(
+        4,
+        minmax(0, 1fr)
+      );
+
+      gap: 20px;
+    }
+  }
+
+  /* =====================================================
+     TABLET
+     768px - 1023px
+  ===================================================== */
+
+  @media (max-width: 1024px) {
+    padding-top: 90px;
+
+    padding-left: 22px;
+    padding-right: 22px;
+
+    ${Header} {
+      margin-bottom: 28px;
+    }
+
+    ${Grid} {
+      grid-template-columns: repeat(
+        3,
+        minmax(0, 1fr)
+      );
+
+      gap: 18px;
+    }
+
+    ${Card} .info {
+      padding: 12px;
+    }
+
+    ${Card} .buttons button {
+      font-size: 0.75rem;
+    }
+  }
+
+  /* =====================================================
+     MOBILE
+     768px
+  ===================================================== */
+
+  @media (max-width: 768px) {
+    padding-top: 82px;
+
+    padding-left: 16px;
+    padding-right: 16px;
+
+    padding-bottom: 40px;
+
+    ${Header} {
+      margin-bottom: 22px;
+
+      gap: 12px;
+    }
+
+    ${Header} h1 {
+      font-size: 1.65rem;
+    }
+
+    ${Header} button {
+      padding: 8px 13px;
+
+      font-size: 0.78rem;
+    }
+
+    ${Grid} {
+      grid-template-columns: repeat(
+        2,
+        minmax(0, 1fr)
+      );
+
+      gap: 14px;
+    }
+
+    ${Card} {
+      border-radius: 9px;
+    }
+
+    ${Card} .info {
+      padding: 10px;
+
+      gap: 8px;
+    }
+
+    ${Card} .info h3 {
+      font-size: 0.85rem;
+    }
+
+    ${Card} .meta {
+      font-size: 0.7rem;
+
+      gap: 5px;
+    }
+
+    ${Card} .info p {
+      font-size: 0.72rem;
+
+      line-height: 1.4;
+
+      -webkit-line-clamp: 2;
+    }
+
+    ${Card} .buttons {
+      gap: 6px;
+    }
+
+    ${Card} .buttons button {
+      min-height: 34px;
+
+      padding: 6px 7px;
+
+      font-size: 0.7rem;
+    }
+  }
+
+  /* =====================================================
+     SMALL MOBILE
+     480px
+  ===================================================== */
+
+  @media (max-width: 480px) {
+    padding-top: 75px;
+
+    padding-left: 10px;
+    padding-right: 10px;
+
+    ${Header} {
+      margin-bottom: 18px;
+    }
+
+    ${Header} h1 {
+      font-size: 1.4rem;
+    }
+
+    ${Header} button {
+      padding: 7px 10px;
+
+      font-size: 0.7rem;
+    }
+
+    ${Grid} {
+      grid-template-columns: repeat(
+        2,
+        minmax(0, 1fr)
+      );
+
+      gap: 10px;
+    }
+
+    ${Card} {
+      border-radius: 7px;
+    }
+
+    ${Card} .info {
+      padding: 8px;
+
+      gap: 6px;
+    }
+
+    ${Card} .info h3 {
+      font-size: 0.74rem;
+    }
+
+    ${Card} .meta {
+      font-size: 0.62rem;
+
+      gap: 4px;
+    }
+
+    ${Card} .info p {
+      font-size: 0.65rem;
+
+      -webkit-line-clamp: 2;
+    }
+
+    ${Card} .buttons {
+      flex-direction: column;
+
+      gap: 5px;
+    }
+
+    ${Card} .buttons button {
+      width: 100%;
+
+      min-height: 30px;
+
+      font-size: 0.65rem;
+    }
+  }
+
+  /* =====================================================
+     VERY SMALL PHONES
+     360px
+  ===================================================== */
+
+  @media (max-width: 360px) {
+    padding-top: 72px;
+
+    padding-left: 8px;
+    padding-right: 8px;
+
+    ${Header} h1 {
+      font-size: 1.25rem;
+    }
+
+    ${Header} button {
+      padding: 6px 8px;
+
+      font-size: 0.65rem;
+    }
+
+    ${Grid} {
+      gap: 8px;
+    }
+
+    ${Card} .info {
+      padding: 7px;
+    }
+
+    ${Card} .info h3 {
+      font-size: 0.68rem;
+    }
+
+    ${Card} .meta {
+      font-size: 0.58rem;
+    }
+
+    ${Card} .info p {
+      font-size: 0.6rem;
+    }
+
+    ${Card} .buttons button {
+      min-height: 28px;
+
+      font-size: 0.6rem;
+    }
+  }
 `;
