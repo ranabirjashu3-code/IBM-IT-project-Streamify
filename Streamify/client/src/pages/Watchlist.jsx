@@ -158,29 +158,60 @@ const Container = styled.div`
   padding: 100px clamp(20px, 4vw, 60px) 50px;
 
   background: #0b0b0b;
-
-  color: #ffffff;
+  color: white;
 
   overflow-x: hidden;
 
-  /* =====================================================
-     HEADER
-  ===================================================== */
+  /* ================================
+     LARGE DESKTOP
+  ================================= */
 
-  ${Header} {
-    width: 100%;
-    max-width: 1800px;
-
-    margin: 0 auto 35px;
-
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-
-    gap: 20px;
+  @media (min-width: 1600px) {
+    padding-top: 115px;
   }
 
-  ${Header} h1 {
+  /* ================================
+     LAPTOP
+  ================================= */
+
+  @media (max-width: 1200px) {
+    padding-left: 30px;
+    padding-right: 30px;
+  }
+
+  /* ================================
+     TABLET
+  ================================= */
+
+  @media (max-width: 768px) {
+    padding-top: 85px;
+    padding-left: 16px;
+    padding-right: 16px;
+  }
+
+  /* ================================
+     MOBILE
+  ================================= */
+
+  @media (max-width: 480px) {
+    padding-top: 75px;
+    padding-left: 10px;
+    padding-right: 10px;
+  }
+`;
+const Header = styled.div`
+  width: 100%;
+  max-width: 1800px;
+
+  margin: 0 auto 35px;
+
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+
+  gap: 20px;
+
+  h1 {
     margin: 0;
 
     color: #ffffff;
@@ -192,7 +223,7 @@ const Container = styled.div`
     line-height: 1.2;
   }
 
-  ${Header} button {
+  button {
     padding: 10px 18px;
 
     border: 1px solid rgba(255, 255, 255, 0.15);
@@ -211,69 +242,69 @@ const Container = styled.div`
 
     white-space: nowrap;
 
-    transition:
-      background 0.25s ease,
-      border-color 0.25s ease,
-      transform 0.2s ease;
+    transition: all 0.25s ease;
   }
 
-  ${Header} button:hover {
+  button:hover {
     background: #46d369;
 
     border-color: #46d369;
 
-    color: #000000;
+    color: #000;
 
     transform: translateY(-2px);
   }
 
-  /* =====================================================
-     GRID
-  ===================================================== */
+  @media (max-width: 768px) {
+    margin-bottom: 22px;
 
-  ${Grid} {
-    width: 100%;
-    max-width: 1800px;
+    h1 {
+      font-size: 1.65rem;
+    }
 
-    margin: 0 auto;
-
-    display: grid;
-
-    grid-template-columns: repeat(
-      auto-fill,
-      minmax(220px, 1fr)
-    );
-
-    gap: clamp(18px, 2vw, 30px);
+    button {
+      padding: 8px 13px;
+      font-size: 0.78rem;
+    }
   }
 
-  /* =====================================================
-     MOVIE CARD
-  ===================================================== */
+  @media (max-width: 480px) {
+    margin-bottom: 18px;
 
-  ${Card} {
-    width: 100%;
+    gap: 10px;
 
-    min-width: 0;
+    h1 {
+      font-size: 1.4rem;
+    }
 
-    overflow: hidden;
-
-    background: #151515;
-
-    border: 1px solid rgba(255, 255, 255, 0.06);
-
-    border-radius: 12px;
-
-    box-shadow:
-      0 8px 25px rgba(0, 0, 0, 0.35);
-
-    transition:
-      transform 0.3s ease,
-      box-shadow 0.3s ease,
-      border-color 0.3s ease;
+    button {
+      padding: 7px 10px;
+      font-size: 0.7rem;
+    }
   }
+`;
+const Card = styled.div`
+  width: 100%;
 
-  ${Card}:hover {
+  min-width: 0;
+
+  overflow: hidden;
+
+  background: #151515;
+
+  border: 1px solid rgba(255, 255, 255, 0.06);
+
+  border-radius: 12px;
+
+  box-shadow:
+    0 8px 25px rgba(0, 0, 0, 0.35);
+
+  transition:
+    transform 0.3s ease,
+    box-shadow 0.3s ease,
+    border-color 0.3s ease;
+
+  &:hover {
     transform: translateY(-7px);
 
     border-color: rgba(70, 211, 105, 0.3);
@@ -282,11 +313,7 @@ const Container = styled.div`
       0 15px 40px rgba(0, 0, 0, 0.6);
   }
 
-  /* =====================================================
-     POSTER
-  ===================================================== */
-
-  ${Card} > img {
+  > img {
     display: block;
 
     width: 100%;
@@ -300,15 +327,11 @@ const Container = styled.div`
     transition: transform 0.4s ease;
   }
 
-  ${Card}:hover > img {
+  &:hover > img {
     transform: scale(1.025);
   }
 
-  /* =====================================================
-     CARD INFO
-  ===================================================== */
-
-  ${Card} .info {
+  .info {
     display: flex;
 
     flex-direction: column;
@@ -318,12 +341,12 @@ const Container = styled.div`
     padding: 15px;
   }
 
-  ${Card} .info h3 {
+  .info h3 {
     margin: 0;
 
-    color: #ffffff;
+    color: white;
 
-    font-size: clamp(0.95rem, 1.2vw, 1.15rem);
+    font-size: clamp(0.9rem, 1.2vw, 1.15rem);
 
     font-weight: 700;
 
@@ -338,11 +361,7 @@ const Container = styled.div`
     overflow: hidden;
   }
 
-  /* =====================================================
-     META
-  ===================================================== */
-
-  ${Card} .meta {
+  .meta {
     display: flex;
 
     align-items: center;
@@ -356,19 +375,11 @@ const Container = styled.div`
     font-size: 0.8rem;
   }
 
-  ${Card} .meta span {
-    display: inline-flex;
-
-    align-items: center;
-
+  .meta span {
     white-space: nowrap;
   }
 
-  /* =====================================================
-     DESCRIPTION
-  ===================================================== */
-
-  ${Card} .info p {
+  .info p {
     margin: 0;
 
     color: rgba(255, 255, 255, 0.58);
@@ -386,11 +397,7 @@ const Container = styled.div`
     overflow: hidden;
   }
 
-  /* =====================================================
-     BUTTONS
-  ===================================================== */
-
-  ${Card} .buttons {
+  .buttons {
     display: flex;
 
     gap: 8px;
@@ -400,7 +407,7 @@ const Container = styled.div`
     margin-top: auto;
   }
 
-  ${Card} .buttons button {
+  .buttons button {
     flex: 1;
 
     min-width: 0;
@@ -415,7 +422,7 @@ const Container = styled.div`
 
     background: #46d369;
 
-    color: #000000;
+    color: #000;
 
     font-size: 0.82rem;
 
@@ -423,68 +430,157 @@ const Container = styled.div`
 
     cursor: pointer;
 
-    transition:
-      background 0.25s ease,
-      transform 0.2s ease;
+    transition: all 0.25s ease;
   }
 
-  ${Card} .buttons button:hover {
+  .buttons button:hover {
     background: #5ee27c;
 
     transform: translateY(-1px);
   }
 
-  ${Card} .buttons button.remove {
+  .buttons button.remove {
     background: rgba(255, 255, 255, 0.1);
 
-    color: #ffffff;
+    color: white;
 
     border: 1px solid rgba(255, 255, 255, 0.12);
   }
 
-  ${Card} .buttons button.remove:hover {
+  .buttons button.remove:hover {
     background: #e50914;
 
     border-color: #e50914;
-
-    color: #ffffff;
   }
 
-  /* =====================================================
-     EMPTY WATCHLIST
-  ===================================================== */
+  @media (max-width: 1024px) {
+    .info {
+      padding: 12px;
+    }
 
-  ${Empty} {
-    min-height: 55vh;
-
-    width: 100%;
-
-    display: flex;
-
-    flex-direction: column;
-
-    align-items: center;
-
-    justify-content: center;
-
-    text-align: center;
-
-    padding: 30px 15px;
-
-    box-sizing: border-box;
+    .buttons button {
+      font-size: 0.75rem;
+    }
   }
 
-  ${Empty} h2 {
+  @media (max-width: 768px) {
+    border-radius: 9px;
+
+    .info {
+      padding: 10px;
+      gap: 8px;
+    }
+
+    .info h3 {
+      font-size: 0.85rem;
+    }
+
+    .meta {
+      font-size: 0.7rem;
+      gap: 5px;
+    }
+
+    .info p {
+      font-size: 0.72rem;
+      -webkit-line-clamp: 2;
+    }
+
+    .buttons {
+      gap: 6px;
+    }
+
+    .buttons button {
+      min-height: 34px;
+      padding: 6px 7px;
+      font-size: 0.7rem;
+    }
+  }
+
+  @media (max-width: 480px) {
+    border-radius: 7px;
+
+    .info {
+      padding: 8px;
+      gap: 6px;
+    }
+
+    .info h3 {
+      font-size: 0.74rem;
+    }
+
+    .meta {
+      font-size: 0.62rem;
+      gap: 4px;
+    }
+
+    .info p {
+      font-size: 0.65rem;
+      -webkit-line-clamp: 2;
+    }
+
+    .buttons {
+      flex-direction: column;
+      gap: 5px;
+    }
+
+    .buttons button {
+      width: 100%;
+      min-height: 30px;
+      font-size: 0.65rem;
+    }
+  }
+
+  @media (max-width: 360px) {
+    .info {
+      padding: 7px;
+    }
+
+    .info h3 {
+      font-size: 0.68rem;
+    }
+
+    .meta {
+      font-size: 0.58rem;
+    }
+
+    .info p {
+      font-size: 0.6rem;
+    }
+
+    .buttons button {
+      min-height: 28px;
+      font-size: 0.6rem;
+    }
+  }
+`;
+const Empty = styled.div`
+  min-height: 55vh;
+
+  width: 100%;
+
+  display: flex;
+
+  flex-direction: column;
+
+  align-items: center;
+
+  justify-content: center;
+
+  text-align: center;
+
+  padding: 30px 15px;
+
+  box-sizing: border-box;
+
+  h2 {
     margin: 0 0 12px;
 
-    color: #ffffff;
+    color: white;
 
     font-size: clamp(1.4rem, 3vw, 2.2rem);
-
-    font-weight: 700;
   }
 
-  ${Empty} p {
+  p {
     max-width: 550px;
 
     margin: 0 0 25px;
@@ -496,7 +592,7 @@ const Container = styled.div`
     line-height: 1.6;
   }
 
-  ${Empty} button {
+  button {
     padding: 11px 22px;
 
     border: none;
@@ -505,7 +601,7 @@ const Container = styled.div`
 
     background: #46d369;
 
-    color: #000000;
+    color: #000;
 
     font-size: 0.9rem;
 
@@ -513,302 +609,29 @@ const Container = styled.div`
 
     cursor: pointer;
 
-    transition:
-      background 0.25s ease,
-      transform 0.2s ease;
+    transition: all 0.25s ease;
   }
 
-  ${Empty} button:hover {
+  button:hover {
     background: #5ee27c;
 
     transform: translateY(-2px);
   }
 
-  /* =====================================================
-     LARGE DESKTOP
-     1600px+
-  ===================================================== */
-
-  @media (min-width: 1600px) {
-    padding-top: 115px;
-
-    ${Grid} {
-      grid-template-columns: repeat(
-        auto-fill,
-        minmax(230px, 1fr)
-      );
-
-      gap: 30px;
-    }
-  }
-
-  /* =====================================================
-     DESKTOP
-     1200px - 1599px
-  ===================================================== */
-
-  @media (max-width: 1400px) {
-    ${Grid} {
-      grid-template-columns: repeat(
-        5,
-        minmax(0, 1fr)
-      );
-
-      gap: 22px;
-    }
-  }
-
-  /* =====================================================
-     LAPTOP
-     1024px - 1199px
-  ===================================================== */
-
-  @media (max-width: 1200px) {
-    padding-left: 30px;
-    padding-right: 30px;
-
-    ${Grid} {
-      grid-template-columns: repeat(
-        4,
-        minmax(0, 1fr)
-      );
-
-      gap: 20px;
-    }
-  }
-
-  /* =====================================================
-     TABLET
-     768px - 1023px
-  ===================================================== */
-
-  @media (max-width: 1024px) {
-    padding-top: 90px;
-
-    padding-left: 22px;
-    padding-right: 22px;
-
-    ${Header} {
-      margin-bottom: 28px;
-    }
-
-    ${Grid} {
-      grid-template-columns: repeat(
-        3,
-        minmax(0, 1fr)
-      );
-
-      gap: 18px;
-    }
-
-    ${Card} .info {
-      padding: 12px;
-    }
-
-    ${Card} .buttons button {
-      font-size: 0.75rem;
-    }
-  }
-
-  /* =====================================================
-     MOBILE
-     768px
-  ===================================================== */
-
-  @media (max-width: 768px) {
-    padding-top: 82px;
-
-    padding-left: 16px;
-    padding-right: 16px;
-
-    padding-bottom: 40px;
-
-    ${Header} {
-      margin-bottom: 22px;
-
-      gap: 12px;
-    }
-
-    ${Header} h1 {
-      font-size: 1.65rem;
-    }
-
-    ${Header} button {
-      padding: 8px 13px;
-
-      font-size: 0.78rem;
-    }
-
-    ${Grid} {
-      grid-template-columns: repeat(
-        2,
-        minmax(0, 1fr)
-      );
-
-      gap: 14px;
-    }
-
-    ${Card} {
-      border-radius: 9px;
-    }
-
-    ${Card} .info {
-      padding: 10px;
-
-      gap: 8px;
-    }
-
-    ${Card} .info h3 {
-      font-size: 0.85rem;
-    }
-
-    ${Card} .meta {
-      font-size: 0.7rem;
-
-      gap: 5px;
-    }
-
-    ${Card} .info p {
-      font-size: 0.72rem;
-
-      line-height: 1.4;
-
-      -webkit-line-clamp: 2;
-    }
-
-    ${Card} .buttons {
-      gap: 6px;
-    }
-
-    ${Card} .buttons button {
-      min-height: 34px;
-
-      padding: 6px 7px;
-
-      font-size: 0.7rem;
-    }
-  }
-
-  /* =====================================================
-     SMALL MOBILE
-     480px
-  ===================================================== */
-
   @media (max-width: 480px) {
-    padding-top: 75px;
+    padding: 20px 10px;
 
-    padding-left: 10px;
-    padding-right: 10px;
-
-    ${Header} {
-      margin-bottom: 18px;
-    }
-
-    ${Header} h1 {
+    h2 {
       font-size: 1.4rem;
     }
 
-    ${Header} button {
-      padding: 7px 10px;
-
-      font-size: 0.7rem;
+    p {
+      font-size: 0.8rem;
     }
 
-    ${Grid} {
-      grid-template-columns: repeat(
-        2,
-        minmax(0, 1fr)
-      );
-
-      gap: 10px;
-    }
-
-    ${Card} {
-      border-radius: 7px;
-    }
-
-    ${Card} .info {
-      padding: 8px;
-
-      gap: 6px;
-    }
-
-    ${Card} .info h3 {
-      font-size: 0.74rem;
-    }
-
-    ${Card} .meta {
-      font-size: 0.62rem;
-
-      gap: 4px;
-    }
-
-    ${Card} .info p {
-      font-size: 0.65rem;
-
-      -webkit-line-clamp: 2;
-    }
-
-    ${Card} .buttons {
-      flex-direction: column;
-
-      gap: 5px;
-    }
-
-    ${Card} .buttons button {
-      width: 100%;
-
-      min-height: 30px;
-
-      font-size: 0.65rem;
-    }
-  }
-
-  /* =====================================================
-     VERY SMALL PHONES
-     360px
-  ===================================================== */
-
-  @media (max-width: 360px) {
-    padding-top: 72px;
-
-    padding-left: 8px;
-    padding-right: 8px;
-
-    ${Header} h1 {
-      font-size: 1.25rem;
-    }
-
-    ${Header} button {
-      padding: 6px 8px;
-
-      font-size: 0.65rem;
-    }
-
-    ${Grid} {
-      gap: 8px;
-    }
-
-    ${Card} .info {
-      padding: 7px;
-    }
-
-    ${Card} .info h3 {
-      font-size: 0.68rem;
-    }
-
-    ${Card} .meta {
-      font-size: 0.58rem;
-    }
-
-    ${Card} .info p {
-      font-size: 0.6rem;
-    }
-
-    ${Card} .buttons button {
-      min-height: 28px;
-
-      font-size: 0.6rem;
+    button {
+      padding: 9px 18px;
+      font-size: 0.8rem;
     }
   }
 `;
