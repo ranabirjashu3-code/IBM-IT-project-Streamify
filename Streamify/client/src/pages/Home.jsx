@@ -304,12 +304,52 @@ const Container = styled.div`
     }
   }
 
-  @media (max-width: 768px) {
-    .content {
-      left: 2rem;
-      top: 52%;
-      max-width: 85%;
-    }
+ /* Large desktop */
+@media (min-width: 1440px) {
+  .content {
+    left: 7rem;
+    max-width: 750px;
+  }
+}
+
+/* Laptop / desktop */
+@media (min-width: 1024px) and (max-width: 1439px) {
+  .content {
+    left: 5vw;
+    max-width: 650px;
+  }
+}
+
+/* Tablet */
+@media (min-width: 769px) and (max-width: 1023px) {
+  .content {
+    left: 5vw;
+    top: 52%;
+    width: 85%;
+    max-width: 600px;
+  }
+}
+  /* Mobile */
+@media (max-width: 768px) {
+  .content {
+    left: 50%;
+    top: 52%;
+    transform: translate(-50%, -50%);
+
+    width: 90%;
+    max-width: 500px;
+
+    text-align: center;
+  }
+}
+
+/* Small mobile */
+@media (max-width: 480px) {
+  .content {
+    top: 54%;
+    width: 92%;
+  }
+}
 
     .title-image {
       width: 240px;
