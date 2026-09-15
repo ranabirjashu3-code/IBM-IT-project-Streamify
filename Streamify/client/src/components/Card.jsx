@@ -18,16 +18,28 @@ export default React.memo(function Card({ movieData, isLiked = false }) {
   const navigate = useNavigate();
   const [showFullOverview, setShowFullOverview] = useState(false);
 
-  //add to watchlist
+  // Open player with movie data
+  const handlePlay = () => {
+    if (!requireAuth(navigate)) return;
+
+    navigate("/player", {
+      state: {
+        movie: movieData,
+      },
+    });
+  };
+
+  // Add / Remove from watchlist
   const handleWatchlist = async () => {
     try {
       const user = firebaseAuth.currentUser;
+
       if (!requireAuth(navigate)) return;
 
       // REMOVE
       if (isInWatchlist) {
         await axios.delete(
-          `${import.meta.env.VITE_API_URL}/api/watchlist/${user.uid}/${movieData.id}/${movieData.mediaType}`
+          `http://localhost:8080/api/watchlist/${user.uid}/${movieData.id}/${movieData.mediaType}`
         );
 
         setIsInWatchlist(false);
@@ -53,7 +65,6 @@ export default React.memo(function Card({ movieData, isLiked = false }) {
       setIsInWatchlist(true);
 
       toast.success("Added to your watchlist.");
-
     } catch (error) {
       console.error("Watchlist error:", error);
 
@@ -79,39 +90,41 @@ export default React.memo(function Card({ movieData, isLiked = false }) {
 
       {isHovered && (
         <div className="hover">
+
           <div className="image-video-container">
+
+            {/* Hover Image */}
             <img
               className="hover-image"
               src={`https://image.tmdb.org/t/p/original${movieData.backdrop}`}
               alt={movieData.name}
-              onClick={() => navigate("/player")}
+              onClick={handlePlay}
             />
 
+            {/* Hover Video */}
             <video
               className="hover-video"
               src={video}
               autoPlay
               muted
               loop
-              onClick={() => {
-                if (!requireAuth(navigate)) return;
-                navigate("/player")
-              }}
+              onClick={handlePlay}
             />
+
           </div>
 
           <div className="movie-details">
+
+            {/* Movie Title */}
             <h3
               className="movie-title"
-              onClick={() => {
-                if (!requireAuth(navigate)) return;
-                navigate("/player")
-              }}
+              onClick={handlePlay}
             >
               {movieData.name}
             </h3>
 
             <div className="movie-info">
+
               <span className="match">
                 ⭐ {movieData.rating?.toFixed(1)}
               </span>
@@ -123,18 +136,20 @@ export default React.memo(function Card({ movieData, isLiked = false }) {
               <span className="lang">
                 {movieData.language?.toUpperCase()}
               </span>
+
             </div>
 
+            {/* Controls */}
             <div className="controls">
+
+              {/* PLAY */}
               <IoPlayCircleSharp
                 className="icon play"
                 title="Play"
-                onClick={() => {
-                  if (!requireAuth(navigate)) return;
-                  navigate("/player")
-                }}
+                onClick={handlePlay}
               />
 
+              {/* LIKE */}
               <RiThumbUpFill
                 className="icon"
                 title="Like"
@@ -143,6 +158,7 @@ export default React.memo(function Card({ movieData, isLiked = false }) {
                 }}
               />
 
+              {/* DISLIKE */}
               <RiThumbDownFill
                 className="icon"
                 title="Dislike"
@@ -151,6 +167,7 @@ export default React.memo(function Card({ movieData, isLiked = false }) {
                 }}
               />
 
+              {/* WATCHLIST */}
               {isInWatchlist ? (
                 <BsCheck
                   className="icon"
@@ -164,8 +181,10 @@ export default React.memo(function Card({ movieData, isLiked = false }) {
                   onClick={handleWatchlist}
                 />
               )}
+
             </div>
 
+            {/* Overview */}
             <p className="overview">
               {showFullOverview
                 ? movieData.overview
@@ -176,18 +195,24 @@ export default React.memo(function Card({ movieData, isLiked = false }) {
               {movieData.overview.length > 120 && (
                 <span
                   className="read-more"
-                  onClick={() => setShowFullOverview(!showFullOverview)}
+                  onClick={() =>
+                    setShowFullOverview(!showFullOverview)
+                  }
                 >
-                  {showFullOverview ? " Show Less" : "... Read More"}
+                  {showFullOverview
+                    ? " Show Less"
+                    : "... Read More"}
                 </span>
               )}
             </p>
 
+            {/* Genres */}
             <ul className="genres">
               {movieData.genres.map((genre) => (
                 <li key={genre}>{genre}</li>
               ))}
             </ul>
+
           </div>
         </div>
       )}

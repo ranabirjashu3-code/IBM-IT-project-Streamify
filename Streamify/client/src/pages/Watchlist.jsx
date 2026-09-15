@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from "react";
+import  { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import axios from "axios";
 import styled from "styled-components";
@@ -17,7 +17,10 @@ export default function Watchlist() {
             const user = firebaseAuth.currentUser;
 
             if (!user) {
-                toast.error("Please login to view your watchlist.");
+                toast.error("Please login to view your watchlist.", {
+                    toastId: "watchlist-login-required",
+                });
+
                 setLoading(false);
                 return;
             }
@@ -39,6 +42,26 @@ export default function Watchlist() {
         getWatchlist();
     }, []);
 
+    const handlePlay = (movie) => {
+        if (!requireAuth(navigate)) return;
+
+        navigate("/player", {
+            state: {
+                movie: {
+                    id: movie.movieId,
+                    mediaType: movie.mediaType,
+                    name: movie.name,
+                    image: movie.image,
+                    backdrop: movie.backdrop,
+                    overview: movie.overview,
+                    rating: movie.rating,
+                    releaseDate: movie.releaseDate,
+                    genres: movie.genres,
+                },
+            },
+        });
+    };
+
     const removeFromWatchlist = async (movie) => {
         const user = firebaseAuth.currentUser;
 
@@ -46,7 +69,7 @@ export default function Watchlist() {
 
         try {
             await axios.delete(
-                `${import.meta.env.VITE_API_URL}/api/watchlist/${user.uid}/${movie.movieId}/${movie.mediaType}`
+                `http://localhost:8080/api/watchlist/${user.uid}/${movie.movieId}/${movie.mediaType}`
             );
 
             setWatchlist((prev) =>
@@ -90,7 +113,7 @@ export default function Watchlist() {
 
                     <button onClick={() => {
                         if (!requireAuth(navigate)) return;
-                         navigate("/")
+                        navigate("/")
                     }}>
                         Browse Movies
                     </button>
@@ -127,7 +150,7 @@ export default function Watchlist() {
 
                                 <div className="buttons">
                                     <button
-                                        onClick={() => navigate("/player")}
+                                        onClick={() => handlePlay(movie)}
                                     >
                                         ▶ Play
                                     </button>

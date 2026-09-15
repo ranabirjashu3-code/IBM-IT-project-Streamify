@@ -1,10 +1,10 @@
-import React, { useState } from "react";
+import React, { useEffect, useRef, useState } from "react";
 import { toast } from "react-toastify";
 import styled from "styled-components";
 import logo from "../assets/logo.png";
-import { FaPowerOff, FaSearch } from "react-icons/fa";
+import { FaPowerOff, FaUser, FaCog, FaSignInAlt, FaSearch } from "react-icons/fa";
 import { Link, useNavigate } from "react-router-dom";
-import { signOut } from "firebase/auth";
+import { signOut, onAuthStateChanged } from "firebase/auth";
 import { firebaseAuth } from "../Utils/firebase-config";
 
 export default function Navbar({ isScrolled }) {
@@ -19,6 +19,37 @@ export default function Navbar({ isScrolled }) {
   const [showSearch, setShoweSearch] = useState(false);
   const [inputHover, setInputHover] = useState(false);
   const navigate = useNavigate();
+  const [showProfileMenu, setShowProfileMenu] = useState(false);
+  const [user, setUser] = useState(null);
+  const profileRef = useRef(null);
+
+  useEffect(() => {
+    const unsubscribe = onAuthStateChanged(
+      firebaseAuth,
+      (currentUser) => {
+        setUser(currentUser);
+      }
+    );
+
+    return () => unsubscribe();
+  }, []);
+
+  useEffect(() => {
+  const handleClickOutside = (event) => {
+    if (
+      profileRef.current &&
+      !profileRef.current.contains(event.target)
+    ) {
+      setShowProfileMenu(false);
+    }
+  };
+
+  document.addEventListener("mousedown", handleClickOutside);
+
+  return () => {
+    document.removeEventListener("mousedown", handleClickOutside);
+  };
+}, []);
 
   const handleLogout = async () => {
     try {
@@ -33,12 +64,13 @@ export default function Navbar({ isScrolled }) {
       toast.error("Logout failed. Please try again.");
     }
   };
+
   return (
     <Container>
       <nav className={isScrolled ? "scrolled" : ""}>
         <div className="left">
           <div className="brand">
-            <img src={logo} alt="logo" />
+            <img src={logo} alt="logo" onClick={() => navigate("/")} />
           </div>
 
           <ul className="links">
@@ -72,11 +104,96 @@ export default function Navbar({ isScrolled }) {
             >
               <FaSearch />
             </button>
+
           </div>
 
-          <button onClick={handleLogout}>
-            <FaPowerOff />
-          </button>
+          <div className="profile-container"   ref={profileRef}>
+
+            <button
+              className="profile-button"
+              onClick={() => setShowProfileMenu(!showProfileMenu)}
+            >
+              {user?.photoURL ? (
+                <img
+                  src={user.photoURL}
+                  alt="Profile"
+                />
+              ) : (
+                <span>
+                  {user?.displayName
+                    ? user.displayName.charAt(0).toUpperCase()
+                    : user?.email?.charAt(0).toUpperCase() || "U"}
+                </span>
+              )}
+            </button>
+
+            {showProfileMenu && (
+              <div className="profile-menu">
+
+                {user ? (
+                  <>
+                    <button
+                      onClick={() => {
+                        setShowProfileMenu(false);
+                        navigate("/profile");
+                      }}
+                    >
+                      <FaUser />
+                      <span>Profile</span>
+                    </button>
+
+                    <button
+                      onClick={() => {
+                        setShowProfileMenu(false);
+                        navigate("/settings");
+                      }}
+                    >
+                      <FaCog />
+                      <span>Settings</span>
+                    </button>
+
+                    <div className="menu-divider"></div>
+
+                    <button
+                      className="logout"
+                      onClick={() => {
+                        setShowProfileMenu(false);
+                        handleLogout();
+                      }}
+                    >
+                      <FaPowerOff />
+                      <span>Logout</span>
+                    </button>
+                  </>
+                ) : (
+                  <>
+                    <button
+                      onClick={() => {
+                        setShowProfileMenu(false);
+                        navigate("/login");
+                      }}
+                    >
+                      <FaSignInAlt />
+                      <span>Login</span>
+                    </button>
+
+                    <button
+                      onClick={() => {
+                        setShowProfileMenu(false);
+                        navigate("/signup");
+                      }}
+                    >
+                      <FaUser />
+                      <span>Sign Up</span>
+                    </button>
+                  </>
+                )}
+
+              </div>
+            )}
+
+          </div>
+
         </div>
       </nav>
     </Container>
@@ -88,10 +205,6 @@ const Container = styled.div`
   position: relative;
   z-index: 9999;
 
-  /* =====================================================
-     NAVBAR
-  ===================================================== */
-
   nav {
     position: fixed;
     top: 0;
@@ -100,155 +213,101 @@ const Container = styled.div`
     width: 100%;
     height: 72px;
 
+    padding: 0 3rem;
+
     display: flex;
     align-items: center;
+    justify-content: space-between;
 
-    padding: 0 clamp(16px, 3vw, 48px);
+    background: rgba(10, 10, 10, 0.75);
+    backdrop-filter: blur(12px);
+    -webkit-backdrop-filter: blur(12px);
 
-    box-sizing: border-box;
-
-    background: rgba(10, 10, 10, 0.82);
-
-    backdrop-filter: blur(16px);
-    -webkit-backdrop-filter: blur(16px);
-
-    border-bottom: 1px solid rgba(255, 255, 255, 0.06);
+    transition: all 0.3s ease;
 
     z-index: 9999;
-
-    transition:
-      background 0.3s ease,
-      box-shadow 0.3s ease,
-      height 0.3s ease;
   }
-
-  /* =====================================================
-     SCROLLED NAVBAR
-  ===================================================== */
 
   nav.scrolled {
-    background: rgba(10, 10, 10, 0.96);
-
-    box-shadow:
-      0 4px 25px rgba(0, 0, 0, 0.45);
+    background: rgba(20, 20, 20, 0.96);
+    box-shadow: 0 3px 15px rgba(0, 0, 0, 0.5);
   }
 
-  /* =====================================================
-     LEFT SECTION
-  ===================================================== */
-
+  /* LEFT */
   .left {
     display: flex;
     align-items: center;
-
     height: 100%;
-
-    gap: clamp(18px, 2.5vw, 40px);
-
-    flex: 1 1 auto;
-
-    min-width: 0;
+    gap: 2.5rem;
   }
 
-  /* =====================================================
-     LOGO
-  ===================================================== */
-
+  /* LOGO */
   .brand {
-    width: clamp(82px, 8vw, 120px);
-    height: 100%;
+    width: 120px;
+    height: 60px;
 
     display: flex;
     align-items: center;
     justify-content: center;
 
-    flex-shrink: 0;
-
     overflow: hidden;
+    flex-shrink: 0;
   }
 
   .brand img {
     display: block;
 
-    width: clamp(78px, 7.5vw, 115px);
-    max-height: 58px;
-
-    height: auto;
+    width: 115px;
+    height: 58px;
 
     object-fit: contain;
     object-position: center;
 
     cursor: pointer;
 
-    transition:
-      transform 0.25s ease,
-      opacity 0.25s ease;
+    transition: transform 0.25s ease;
   }
 
   .brand img:hover {
     transform: scale(1.04);
-    opacity: 0.95;
   }
 
-  /* =====================================================
-     NAVIGATION LINKS
-  ===================================================== */
-
+  /* NAV LINKS */
   .links {
     display: flex;
     align-items: center;
 
-    gap: clamp(14px, 1.8vw, 32px);
+    gap: 2rem;
 
     margin: 0;
     padding: 0;
 
     list-style: none;
-
-    white-space: nowrap;
-
-    flex: 0 1 auto;
-
-    min-width: 0;
   }
 
   .links li {
     display: flex;
     align-items: center;
-
-    flex-shrink: 0;
   }
 
   .links a {
     position: relative;
 
-    display: inline-flex;
-    align-items: center;
-
-    color: rgba(255, 255, 255, 0.78);
+    color: #ddd;
 
     text-decoration: none;
 
-    font-size: clamp(13px, 1vw, 16px);
-
+    font-size: 1rem;
     font-weight: 600;
-
-    line-height: 1;
 
     white-space: nowrap;
 
-    padding: 10px 0;
-
-    transition:
-      color 0.25s ease,
-      transform 0.25s ease;
+    transition: color 0.25s ease;
   }
 
   .links a:hover {
-    color: #ffffff;
+    color: #fff;
   }
-
-  /* Active / hover underline */
 
   .links a::after {
     content: "";
@@ -256,12 +315,10 @@ const Container = styled.div`
     position: absolute;
 
     left: 0;
-    bottom: 1px;
+    bottom: -7px;
 
     width: 0;
     height: 2px;
-
-    border-radius: 10px;
 
     background: #46d369;
 
@@ -272,24 +329,12 @@ const Container = styled.div`
     width: 100%;
   }
 
-  /* =====================================================
-     RIGHT SECTION
-  ===================================================== */
-
+  /* RIGHT */
   .right {
     display: flex;
     align-items: center;
-
-    gap: 8px;
-
-    flex-shrink: 0;
-
-    margin-left: clamp(16px, 2vw, 32px);
+    gap: 0.7rem;
   }
-
-  /* =====================================================
-     RIGHT ICON BUTTONS
-  ===================================================== */
 
   .right > button {
     width: 40px;
@@ -306,32 +351,21 @@ const Container = styled.div`
 
     background: transparent;
 
-    color: rgba(255, 255, 255, 0.9);
+    color: white;
 
-    font-size: 18px;
+    font-size: 1.15rem;
 
     cursor: pointer;
 
-    flex-shrink: 0;
-
-    transition:
-      background 0.25s ease,
-      color 0.25s ease,
-      transform 0.25s ease;
+    transition: all 0.25s ease;
   }
 
   .right > button:hover {
     background: rgba(255, 255, 255, 0.1);
-
     color: #46d369;
-
-    transform: scale(1.05);
   }
 
-  /* =====================================================
-     SEARCH
-  ===================================================== */
-
+  /* SEARCH */
   .search {
     display: flex;
     align-items: center;
@@ -342,36 +376,27 @@ const Container = styled.div`
     overflow: hidden;
 
     border: 1px solid transparent;
-
-    border-radius: 6px;
+    border-radius: 5px;
 
     background: transparent;
-
-    flex-shrink: 0;
 
     transition:
       width 0.3s ease,
       background 0.3s ease,
-      border-color 0.3s ease,
-      box-shadow 0.3s ease;
+      border-color 0.3s ease;
   }
 
   .search.show-search {
-    width: clamp(170px, 18vw, 240px);
+    width: 230px;
 
     background: rgba(0, 0, 0, 0.75);
 
-    border-color: rgba(255, 255, 255, 0.2);
-
-    box-shadow:
-      0 4px 15px rgba(0, 0, 0, 0.25);
+    border-color: rgba(255, 255, 255, 0.35);
   }
 
   .search input {
     width: 0;
     height: 100%;
-
-    min-width: 0;
 
     padding: 0;
 
@@ -380,23 +405,20 @@ const Container = styled.div`
 
     background: transparent;
 
-    color: #ffffff;
+    color: white;
 
-    font-size: 14px;
+    font-size: 0.9rem;
 
-    transition:
-      width 0.3s ease,
-      padding 0.3s ease;
+    transition: width 0.3s ease;
   }
 
   .search.show-search input {
     width: 100%;
-
     padding: 0 10px;
   }
 
   .search input::placeholder {
-    color: rgba(255, 255, 255, 0.55);
+    color: rgba(255, 255, 255, 0.6);
   }
 
   .search button {
@@ -408,436 +430,389 @@ const Container = styled.div`
     align-items: center;
     justify-content: center;
 
-    padding: 0;
-
     border: none;
 
     background: transparent;
-
-    color: #ffffff;
+    color: white;
 
     cursor: pointer;
-
-    flex-shrink: 0;
-
-    transition:
-      background 0.25s ease,
-      color 0.25s ease;
   }
 
   .search button:hover {
-    background: rgba(255, 255, 255, 0.08);
-
-    color: #46d369;
+    background: rgba(255, 255, 255, 0.1);
   }
 
-  /* =====================================================
-     LARGE DESKTOP
-     1440px+
-  ===================================================== */
-
-  @media (min-width: 1440px) {
-    nav {
-      height: 76px;
-    }
-
-    .links {
-      gap: 34px;
-    }
-
-    .links a {
-      font-size: 16px;
-    }
-
-    .right {
-      gap: 10px;
-    }
-  }
-
-  /* =====================================================
-     DESKTOP / LAPTOP
-     1200px
-  ===================================================== */
-
-  @media (max-width: 1200px) {
-    nav {
-      padding: 0 28px;
-    }
-
-    .left {
-      gap: 24px;
-    }
-
-    .links {
-      gap: 20px;
-    }
-
-    .links a {
-      font-size: 14px;
-    }
-
-    .search.show-search {
-      width: 200px;
-    }
-  }
-
-  /* =====================================================
-     TABLET
-     1024px
-  ===================================================== */
-
+  /* TABLET */
   @media (max-width: 1024px) {
     nav {
-      height: 66px;
-
-      padding: 0 20px;
+      padding: 0 1.5rem;
     }
 
     .left {
-      gap: 18px;
+      gap: 1.5rem;
+    }
+
+    .links {
+      gap: 1.2rem;
     }
 
     .brand {
-      width: 92px;
+      width: 105px;
+    }
+
+    .brand img {
+      width: 100px;
+    }
+
+    .links a {
+      font-size: 0.9rem;
+    }
+  }
+
+  /* MOBILE */
+  @media (max-width: 768px) {
+    nav {
+      height: 62px;
+      padding: 0 1rem;
+    }
+
+    .brand {
+      width: 90px;
+      height: 52px;
     }
 
     .brand img {
       width: 88px;
+      height: 48px;
     }
 
     .links {
-      gap: 14px;
-    }
-
-    .links a {
-      font-size: 13px;
-    }
-
-    .right {
-      gap: 5px;
-
-      margin-left: 16px;
-    }
-
-    .right > button {
-      width: 36px;
-      height: 36px;
-
-      font-size: 16px;
-    }
-
-    .search.show-search {
-      width: 170px;
-    }
-  }
-
-  /* =====================================================
-     SMALL TABLET
-     850px
-  ===================================================== */
-
-  @media (max-width: 850px) {
-    nav {
-      padding: 0 14px;
-    }
-
-    .left {
-      gap: 14px;
-    }
-
-    .brand {
-      width: 78px;
-    }
-
-    .brand img {
-      width: 76px;
-    }
-
-    .links {
-      gap: 11px;
-    }
-
-    .links a {
-      font-size: 12px;
-    }
-
-    .right {
-      margin-left: 12px;
-    }
-
-    .search.show-search {
-      width: 150px;
-    }
-  }
-
-  /* =====================================================
-     MOBILE
-     768px
-  ===================================================== */
-
-  @media (max-width: 768px) {
-    nav {
-      height: 60px;
-
-      padding: 0 12px;
-
-      /*
-        Keep everything accessible.
-        The navbar can scroll horizontally if needed.
-      */
-      overflow-x: auto;
-      overflow-y: hidden;
-
-      justify-content: flex-start;
-
-      -webkit-overflow-scrolling: touch;
-
-      scrollbar-width: none;
-    }
-
-    nav::-webkit-scrollbar {
       display: none;
     }
 
-    .left {
-      flex: 0 0 auto;
-
-      gap: 12px;
-    }
-
-    .brand {
-      width: 76px;
-      height: 54px;
-    }
-
-    .brand img {
-      width: 74px;
-      max-height: 46px;
-    }
-
-    .links {
-      display: flex;
-
-      gap: 12px;
-
-      flex: 0 0 auto;
-    }
-
-    .links a {
-      font-size: 12px;
-
-      padding: 8px 0;
-    }
-
     .right {
-      flex: 0 0 auto;
-
-      margin-left: 14px;
-
-      gap: 4px;
-    }
-
-    .right > button {
-      width: 34px;
-      height: 34px;
-
-      font-size: 15px;
-    }
-
-    .search {
-      width: 34px;
-      height: 34px;
+      gap: 0.3rem;
     }
 
     .search.show-search {
-      width: 145px;
-    }
-
-    .search button {
-      width: 34px;
-      min-width: 34px;
-      height: 34px;
+      width: 180px;
     }
   }
+  /* ========================================
+   PROFILE
+======================================== */
 
-  /* =====================================================
-     MOBILE
-     600px
-  ===================================================== */
+.profile-container {
+  position: relative;
 
-  @media (max-width: 600px) {
-    nav {
-      padding: 0 10px;
-    }
+  display: flex;
+  align-items: center;
 
-    .left {
-      gap: 10px;
-    }
+  z-index: 10000;
+}
 
-    .brand {
-      width: 68px;
-    }
+/* ========================================
+   PROFILE AVATAR
+======================================== */
 
-    .brand img {
-      width: 66px;
-    }
+.profile-button {
+  width: 42px;
+  height: 42px;
 
-    .links {
-      gap: 10px;
-    }
+  padding: 0;
+  margin: 0;
 
-    .links a {
-      font-size: 11px;
-    }
+  display: flex;
+  align-items: center;
+  justify-content: center;
 
-    .right {
-      margin-left: 12px;
-    }
+  border: 2px solid rgba(255, 255, 255, 0.2);
+  border-radius: 50%;
 
-    .right > button {
-      width: 32px;
-      height: 32px;
+  background: linear-gradient(
+    145deg,
+    #3a3a3a,
+    #222
+  );
 
-      font-size: 14px;
-    }
+  color: #fff;
 
-    .search {
-      width: 32px;
-      height: 32px;
-    }
+  cursor: pointer;
 
-    .search.show-search {
-      width: 130px;
-    }
+  overflow: hidden;
 
-    .search button {
-      width: 32px;
-      min-width: 32px;
-      height: 32px;
-    }
+  outline: none;
+
+  transition:
+    transform 0.25s ease,
+    border-color 0.25s ease,
+    box-shadow 0.25s ease;
+}
+
+/* Avatar hover */
+
+.profile-button:hover {
+  transform: scale(1.08);
+
+  border-color: rgba(255, 255, 255, 0.6);
+
+  box-shadow:
+    0 0 0 3px rgba(255, 255, 255, 0.08),
+    0 6px 18px rgba(0, 0, 0, 0.5);
+}
+
+/* Avatar click */
+
+.profile-button:active {
+  transform: scale(0.96);
+}
+
+/* ========================================
+   PROFILE IMAGE
+======================================== */
+
+.profile-button img {
+  width: 100%;
+  height: 100%;
+
+  display: block;
+
+  object-fit: cover;
+
+  border-radius: 50%;
+}
+
+/* ========================================
+   PROFILE LETTER
+======================================== */
+
+.profile-button span {
+  width: 100%;
+  height: 100%;
+
+  display: flex;
+  align-items: center;
+  justify-content: center;
+
+  color: #fff;
+
+  font-family: Arial, sans-serif;
+
+  font-size: 17px;
+
+  font-weight: 700;
+
+  text-transform: uppercase;
+
+  user-select: none;
+}
+
+/* ========================================
+   DROPDOWN MENU
+======================================== */
+
+.profile-menu {
+  position: absolute;
+
+  top: calc(100% + 12px);
+  right: 0;
+
+  width: 210px;
+
+  padding: 8px;
+
+  background: rgba(24, 24, 24, 0.98);
+
+  border: 1px solid rgba(255, 255, 255, 0.1);
+
+  border-radius: 10px;
+
+  box-shadow:
+    0 18px 45px rgba(0, 0, 0, 0.7),
+    0 5px 15px rgba(0, 0, 0, 0.35);
+
+  backdrop-filter: blur(15px);
+  -webkit-backdrop-filter: blur(15px);
+
+  z-index: 99999;
+
+  animation: profileDropdown 0.2s ease-out;
+}
+
+/* ========================================
+   DROPDOWN ANIMATION
+======================================== */
+
+@keyframes profileDropdown {
+  from {
+    opacity: 0;
+
+    transform:
+      translateY(-8px)
+      scale(0.96);
   }
 
-  /* =====================================================
-     SMALL MOBILE
-     480px
-  ===================================================== */
+  to {
+    opacity: 1;
 
-  @media (max-width: 480px) {
-    nav {
-      height: 56px;
+    transform:
+      translateY(0)
+      scale(1);
+  }
+}
 
-      padding: 0 8px;
-    }
+/* ========================================
+   MENU BUTTONS
+======================================== */
 
-    .left {
-      gap: 8px;
-    }
+.profile-menu button {
+  width: 100%;
 
-    .brand {
-      width: 62px;
-      height: 50px;
-    }
+  min-height: 44px;
 
-    .brand img {
-      width: 60px;
-      max-height: 42px;
-    }
+  display: flex;
+  align-items: center;
 
-    .links {
-      gap: 9px;
-    }
+  gap: 13px;
 
-    .links a {
-      font-size: 10.5px;
-    }
+  padding: 10px 12px;
 
-    .right {
-      margin-left: 10px;
+  margin: 0;
 
-      gap: 3px;
-    }
+  border: none;
 
-    .right > button {
-      width: 30px;
-      height: 30px;
+  border-radius: 7px;
 
-      font-size: 13px;
-    }
+  background: transparent;
 
-    .search {
-      width: 30px;
-      height: 30px;
-    }
+  color: #d6d6d6;
 
-    .search.show-search {
-      width: 120px;
-    }
+  font-family: Arial, sans-serif;
 
-    .search button {
-      width: 30px;
-      min-width: 30px;
-      height: 30px;
-    }
+  font-size: 14px;
 
-    .search input {
-      font-size: 12px;
-    }
+  font-weight: 500;
+
+  text-align: left;
+
+  cursor: pointer;
+
+  outline: none;
+
+  transition:
+    background 0.2s ease,
+    color 0.2s ease,
+    transform 0.2s ease;
+}
+
+/* Icons */
+
+.profile-menu button svg {
+  width: 17px;
+  min-width: 17px;
+
+  font-size: 15px;
+
+  color: #aaa;
+
+  transition:
+    color 0.2s ease,
+    transform 0.2s ease;
+}
+
+/* Hover */
+
+.profile-menu button:hover {
+  background: rgba(255, 255, 255, 0.08);
+
+  color: #fff;
+
+  transform: translateX(2px);
+}
+
+.profile-menu button:hover svg {
+  color: #fff;
+
+  transform: scale(1.08);
+}
+
+/* ========================================
+   DIVIDER
+======================================== */
+
+.menu-divider {
+  width: calc(100% - 8px);
+
+  height: 1px;
+
+  margin: 7px 4px;
+
+  background: rgba(255, 255, 255, 0.1);
+}
+
+/* ========================================
+   LOGOUT
+======================================== */
+
+.profile-menu .logout {
+  color: #ff5a5a;
+}
+
+.profile-menu .logout svg {
+  color: #ff5a5a;
+}
+
+.profile-menu .logout:hover {
+  background: rgba(229, 9, 20, 0.12);
+
+  color: #ff3333;
+}
+
+.profile-menu .logout:hover svg {
+  color: #ff3333;
+}
+
+/* ========================================
+   MOBILE
+======================================== */
+
+@media (max-width: 768px) {
+  .profile-button {
+    width: 38px;
+    height: 38px;
   }
 
-  /* =====================================================
-     VERY SMALL PHONES
-     360px
-  ===================================================== */
-
-  @media (max-width: 360px) {
-    nav {
-      padding: 0 6px;
-    }
-
-    .left {
-      gap: 7px;
-    }
-
-    .brand {
-      width: 56px;
-    }
-
-    .brand img {
-      width: 54px;
-    }
-
-    .links {
-      gap: 8px;
-    }
-
-    .links a {
-      font-size: 10px;
-    }
-
-    .right {
-      margin-left: 8px;
-    }
-
-    .right > button {
-      width: 28px;
-      height: 28px;
-
-      font-size: 12px;
-    }
-
-    .search {
-      width: 28px;
-      height: 28px;
-    }
-
-    .search.show-search {
-      width: 110px;
-    }
-
-    .search button {
-      width: 28px;
-      min-width: 28px;
-      height: 28px;
-    }
+  .profile-button span {
+    font-size: 15px;
   }
+
+  .profile-menu {
+    width: 190px;
+
+    top: calc(100% + 10px);
+  }
+
+  .profile-menu button {
+    min-height: 42px;
+
+    font-size: 13px;
+  }
+}
+
+/* ========================================
+   SMALL MOBILE
+======================================== */
+
+@media (max-width: 480px) {
+  .profile-button {
+    width: 36px;
+    height: 36px;
+  }
+
+  .profile-menu {
+    width: 180px;
+
+    right: -5px;
+  }
+}
 `;

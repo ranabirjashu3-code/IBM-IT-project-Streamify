@@ -3,7 +3,6 @@ import {
     createAsyncThunk,
     createSlice,
 } from "@reduxjs/toolkit";
-import { API_KEY, TMDB_BASE_URL } from "../Utils/constants";
 import axios from "axios";
 
 const initialState = {
@@ -22,14 +21,19 @@ const initialState = {
 export const getGenres = createAsyncThunk(
     "streamify/genres",
     async () => {
+        const API_URL = import.meta.env.VITE_API_URL;
+
         const [movieRes, tvRes] = await Promise.all([
-            axios.get(`${TMDB_BASE_URL}/genre/movie/list?api_key=${API_KEY}`),
-            axios.get(`${TMDB_BASE_URL}/genre/tv/list?api_key=${API_KEY}`),
+            axios.get(`${API_URL}/api/tmdb/genres/movie`),
+            axios.get(`${API_URL}/api/tmdb/genres/tv`),
         ]);
 
         const genreMap = {};
 
-        [...movieRes.data.genres, ...tvRes.data.genres].forEach((genre) => {
+        [
+            ...movieRes.data.genres,
+            ...tvRes.data.genres,
+        ].forEach((genre) => {
             genreMap[genre.id] = genre.name;
         });
 
@@ -94,13 +98,15 @@ const createArrayFromRawData = (array, mediaArray, genres) => {
 };
 
 const getRawData = async (
-    api,
+    endpoint,
     genres,
     paging = true,
     maxItems = 120,
     maxPages = 20
 ) => {
     const mediaArray = [];
+
+    const API_URL = import.meta.env.VITE_API_URL;
 
     for (
         let page = 1;
@@ -109,7 +115,13 @@ const getRawData = async (
     ) {
         try {
             const { data } = await axios.get(
-                `${api}${paging ? `&page=${page}` : ""}`
+                `${API_URL}/api/tmdb/category`,
+                {
+                    params: {
+                        endpoint,
+                        page: paging ? page : undefined,
+                    },
+                }
             );
 
             createArrayFromRawData(
@@ -118,10 +130,16 @@ const getRawData = async (
                 genres
             );
 
-            if (!data.results?.length) break;
+            if (!data.results?.length) {
+                break;
+            }
 
         } catch (error) {
-            console.error("TMDB Error:", error);
+            console.error(
+                "TMDB Error:",
+                error.response?.data || error.message
+            );
+
             break;
         }
     }
@@ -146,10 +164,8 @@ export const fetchCategory = createAsyncThunk(
             streamify: { genres },
         } = thunkAPI.getState();
 
-        const separator = endpoint.includes("?") ? "&" : "?";
-
         const data = await getRawData(
-            `${TMDB_BASE_URL}${endpoint}${separator}api_key=${API_KEY}`,
+            endpoint,
             genres,
             paging,
             maxItems,
@@ -186,3 +202,5 @@ export const store = configureStore({
         streamify: StreamifySlice.reducer,
     }
 });
+
+

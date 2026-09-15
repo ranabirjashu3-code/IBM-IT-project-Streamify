@@ -10,7 +10,7 @@ export default function Header({ login, hideButton }) {
   return (
     <Container>
       <div className="logo">
-        <img src={logo} alt="logo" />
+        <img src={logo} alt="logo" onClick={()=>navigate("/")}/>
       </div>
 
       {!hideButton && (

@@ -9,181 +9,190 @@ import { toast } from "react-toastify";
 import { firebaseAuth } from "../Utils/firebase-config";
 import { requireAuth } from "../Utils/requireAuth";
 
+
 export default function Hero({ items = [] }) {
-    const navigate = useNavigate();
-    const [currentIndex, setCurrentIndex] = useState(0);
-    const [isInWatchlist, setIsInWatchlist] = useState(false);
+  const navigate = useNavigate();
+  const [currentIndex, setCurrentIndex] = useState(0);
+  const [isInWatchlist, setIsInWatchlist] = useState(false);
 
-    useEffect(() => {
-        if (!items || items.length === 0) return;
+  useEffect(() => {
+    if (!items || items.length === 0) return;
 
-        const randomIndex = Math.floor(Math.random() * items.length);
-        setCurrentIndex(randomIndex);
-    }, [items]);
+    const randomIndex = Math.floor(Math.random() * items.length);
+    setCurrentIndex(randomIndex);
+  }, [items]);
 
-    useEffect(() => {
-        if (!items || items.length <= 1) return;
+  useEffect(() => {
+    if (!items || items.length <= 1) return;
 
-        const interval = setInterval(() => {
-            setCurrentIndex((prev) => (prev + 1) % items.length);
-        }, 6000);
+    const interval = setInterval(() => {
+      setCurrentIndex((prev) => (prev + 1) % items.length);
+    }, 8000);
 
-        return () => clearInterval(interval);
-    }, [items]);
+    return () => clearInterval(interval);
+  }, [items]);
 
-    if (!items || items.length === 0) {
-        return null;
+  if (!items || items.length === 0) {
+    return null;
+  }
+
+  const item = items[currentIndex];
+
+  if (!item) {
+    return null;
+  }
+
+  const previousSlide = () => {
+    setCurrentIndex((prev) =>
+      prev === 0 ? items.length - 1 : prev - 1
+    );
+  };
+
+  const nextSlide = () => {
+    setCurrentIndex((prev) =>
+      (prev + 1) % items.length
+    );
+  };
+  //add to watchlist
+  const handleWatchlist = async () => {
+    if (!requireAuth(navigate)) return;
+
+    const user = firebaseAuth.currentUser;
+
+    if (!user) {
+      toast.error("Please login to manage your watchlist.");
+      return;
     }
 
-    const item = items[currentIndex];
+    try {
+      // REMOVE
+      if (isInWatchlist) {
+        await axios.delete(
+          `${import.meta.env.VITE_API_URL}/api/watchlist/${user.uid}/${item.id}/${item.mediaType}`
+        );
 
-    if (!item) {
-        return null;
+        setIsInWatchlist(false);
+
+        toast.success("Removed from your watchlist.");
+        return;
+      }
+
+      // ADD
+      await axios.post(
+        `${import.meta.env.VITE_API_URL}/api/watchlist`,
+        {
+          userId: user.uid,
+          movieId: item.id,
+          mediaType: item.mediaType,
+          name: item.name,
+          image: item.image,
+          backdrop: item.backdrop,
+          overview: item.overview,
+          rating: item.rating,
+          releaseDate: item.releaseDate,
+          genres: item.genres,
+        }
+      );
+
+      setIsInWatchlist(true);
+
+      toast.success("Added to your watchlist.");
+
+    } catch (error) {
+      console.error("Watchlist error:", error);
+
+      if (error.response?.status === 409) {
+        setIsInWatchlist(true);
+        toast.info("Already in your watchlist.");
+      } else {
+        toast.error("Unable to update your watchlist.");
+      }
     }
+  };
 
-    const previousSlide = () => {
-        setCurrentIndex((prev) =>
-            prev === 0 ? items.length - 1 : prev - 1
-        );
-    };
-
-    const nextSlide = () => {
-        setCurrentIndex((prev) =>
-            (prev + 1) % items.length
-        );
-    };
-    //add to watchlist
-    const handleWatchlist = async () => {
-        if (!requireAuth(navigate)) return;
-
-        const user = firebaseAuth.currentUser;
-
-        if (!user) {
-            toast.error("Please login to manage your watchlist.");
-            return;
-        }
-
-        try {
-            // REMOVE
-            if (isInWatchlist) {
-                await axios.delete(
-                    `${import.meta.env.VITE_API_URL}/api/watchlist/${user.uid}/${item.id}/${item.mediaType}`
-                );
-
-                setIsInWatchlist(false);
-
-                toast.success("Removed from your watchlist.");
-                return;
-            }
-
-            // ADD
-            await axios.post(
-                `${import.meta.env.VITE_API_URL}/api/watchlist`,
-                {
-                    userId: user.uid,
-                    movieId: item.id,
-                    mediaType: item.mediaType,
-                    name: item.name,
-                    image: item.image,
-                    backdrop: item.backdrop,
-                    overview: item.overview,
-                    rating: item.rating,
-                    releaseDate: item.releaseDate,
-                    genres: item.genres,
-                }
-            );
-
-            setIsInWatchlist(true);
-
-            toast.success("Added to your watchlist.");
-
-        } catch (error) {
-            console.error("Watchlist error:", error);
-
-            if (error.response?.status === 409) {
-                setIsInWatchlist(true);
-                toast.info("Already in your watchlist.");
-            } else {
-                toast.error("Unable to update your watchlist.");
-            }
-        }
-    };
-
-    return (
-        <HeroContainer
-            style={{
-                backgroundImage: `url(
+  return (
+    <HeroContainer
+      style={{
+        backgroundImage: `url(
           https://image.tmdb.org/t/p/original${item.backdrop}
         )`,
+      }}
+    >
+      <Overlay />
+      <Arrow
+        className="left-arrow"
+        onClick={previousSlide}
+        aria-label="Previous"
+      >
+        <IoChevronBack />
+      </Arrow>
+
+      <Arrow
+        className="right-arrow"
+        onClick={nextSlide}
+        aria-label="Next"
+      >
+        <IoChevronForward />
+      </Arrow>
+      <Content key={item.id}>
+        <h1>{item.name}</h1>
+
+        <Info>
+          <Rating>⭐ {item.rating?.toFixed(1)}</Rating>
+
+          <span>{item.releaseDate?.substring(0, 4)}</span>
+
+          <span>
+            {item.mediaType === "tv" ? "TV Show" : "Movie"}
+          </span>
+
+          {item.genres?.slice(0, 3).map((genre) => (
+            <span key={genre}>{genre}</span>
+          ))}
+        </Info>
+
+        <Overview>
+          {item.overview?.length > 220
+            ? `${item.overview.substring(0, 220)}...`
+            : item.overview}
+        </Overview>
+
+        <Buttons>
+          <button
+            className="play"
+            onClick={() => {
+              if (!requireAuth(navigate)) return;
+
+              navigate("/player", {
+                state: {
+                  movie: item,
+                },
+              });
             }}
-        >
-            <Overlay />
-            <Arrow
-                className="left-arrow"
-                onClick={previousSlide}
-                aria-label="Previous"
-            >
-                <IoChevronBack />
-            </Arrow>
+          >
+            <IoPlayCircleSharp />
+            Watch Now
+          </button>
 
-            <Arrow
-                className="right-arrow"
-                onClick={nextSlide}
-                aria-label="Next"
-            >
-                <IoChevronForward />
-            </Arrow>
-            <Content key={item.id}>
-                <h1>{item.name}</h1>
+          <button className="list" onClick={handleWatchlist}>
+            {isInWatchlist ? <BsCheck /> : <AiOutlinePlus />}
 
-                <Info>
-                    <Rating>⭐ {item.rating?.toFixed(1)}</Rating>
+            {isInWatchlist ? "In Watchlist" : "Watchlist"}
+          </button>
+        </Buttons>
+      </Content>
 
-                    <span>{item.releaseDate?.substring(0, 4)}</span>
-
-                    <span>
-                        {item.mediaType === "tv" ? "TV Show" : "Movie"}
-                    </span>
-
-                    {item.genres?.slice(0, 3).map((genre) => (
-                        <span key={genre}>{genre}</span>
-                    ))}
-                </Info>
-
-                <Overview>
-                    {item.overview?.length > 220
-                        ? `${item.overview.substring(0, 220)}...`
-                        : item.overview}
-                </Overview>
-
-                <Buttons>
-                    <button
-                        className="play"
-                        onClick={() => navigate("/player")}
-                    >
-                        <IoPlayCircleSharp />
-                        Watch Now
-                    </button>
-
-                    <button className="list" onClick={handleWatchlist}>
-                        {isInWatchlist ? <BsCheck /> : <AiOutlinePlus />}
-
-                        {isInWatchlist ? "In Watchlist" : "Watchlist"}
-                    </button>
-                </Buttons>
-            </Content>
-
-            <Dots>
-                {items.slice(0, 6).map((_, index) => (
-                    <Dot
-                        key={index}
-                        $active={index === currentIndex}
-                        onClick={() => setCurrentIndex(index)}
-                    />
-                ))}
-            </Dots>
-        </HeroContainer>
-    );
+      <Dots>
+        {items.slice(0, 6).map((_, index) => (
+          <Dot
+            key={index}
+            $active={index === currentIndex}
+            onClick={() => setCurrentIndex(index)}
+          />
+        ))}
+      </Dots>
+    </HeroContainer>
+  );
 }
 
 
@@ -511,9 +520,9 @@ const Dot = styled.button`
   border-radius: 10px;
 
   background: ${(props) =>
-        props.$active
-            ? "#fff"
-            : "rgba(255, 255, 255, 0.4)"};
+    props.$active
+      ? "#fff"
+      : "rgba(255, 255, 255, 0.4)"};
 
   cursor: pointer;
 
