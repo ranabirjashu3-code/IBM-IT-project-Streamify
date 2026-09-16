@@ -24,7 +24,7 @@ app.use("/api/watchlist", watchlistRoutes);
 app.use("/api/watch-history", watchHistoryRouter);
 app.use("/api/tmdb", tmdbRoutes);
 app.use("/api/comments",commentRoutes);
-app.use("/api/comments",commentRoutes);
+app.use("/api/interactions",interactionRoutes);
 
 
 mongoose
