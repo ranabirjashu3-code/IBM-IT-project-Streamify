@@ -6,6 +6,8 @@ import userRoutes from "./routes/users.js";
 import watchlistRoutes from "./routes/watchlist.js";
 import watchHistoryRouter from "./routes/watchHistory.js";
 import tmdbRoutes from "./routes/tmdbRoutes.js";
+import commentRoutes from "./routes/commentRoutes.js";
+import interactionRoutes from "./routes/interactionRoutes.js";
 import dns from "dns";
 
 dotenv.config();
@@ -21,6 +23,8 @@ app.use("/api/users", userRoutes);
 app.use("/api/watchlist", watchlistRoutes);
 app.use("/api/watch-history", watchHistoryRouter);
 app.use("/api/tmdb", tmdbRoutes);
+app.use("/api/comments",commentRoutes);
+app.use("/api/comments",commentRoutes);
 
 
 mongoose
