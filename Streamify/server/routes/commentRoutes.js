@@ -63,6 +63,59 @@ router.post("/:contentId", async (req, res) => {
     }
 });
 
+//Edit comment
+router.put("/:commentId", async (req, res) => {
+    try {
+        const { commentId } = req.params;
+        const { userId, text } = req.body;
+
+        if (!userId) {
+            return res.status(400).json({
+                message: "User ID is required"
+            });
+        }
+
+        if (!text || !text.trim()) {
+            return res.status(400).json({
+                message: "Comment cannot be empty"
+            });
+        }
+
+        const comment = await Comment.findById(
+            commentId
+        );
+
+        if (!comment) {
+            return res.status(404).json({
+                message: "Comment not found"
+            });
+        }
+
+        if (comment.userId !== userId) {
+            return res.status(403).json({
+                message:
+                    "You can edit only your own comment"
+            });
+        }
+
+        comment.text = text.trim();
+
+        await comment.save();
+
+        res.status(200).json(comment);
+
+    } catch (error) {
+        console.error(
+            "Edit comment error:",
+            error
+        );
+
+        res.status(500).json({
+            message: "Failed to edit comment"
+        });
+    }
+});
+
 
 // DELETE COMMENT
 router.delete("/:commentId", async (req, res) => {
