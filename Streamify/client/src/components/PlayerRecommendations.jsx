@@ -99,7 +99,6 @@ export default function PlayerRecommendations({ movie }) {
 
   return (
     <Container>
-      <Eyebrow>RELATED CONTENT</Eyebrow>
 
       <Heading>More Like This</Heading>
 

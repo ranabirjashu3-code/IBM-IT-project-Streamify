@@ -151,14 +151,23 @@ export default function AIRecommendations() {
   );
 }
 
+
 const Section = styled.section`
   position: relative;
-  z-index: 1;
+  z-index: 30;
+
   padding: 1.5rem 0 1rem;
   background: #141414;
   color: #fff;
-  overflow: hidden;
+
+  /* Allow hover cards to overlap the next slider */
+  overflow: visible;
+
+  &:hover {
+    z-index: 99999;
+  }
 `;
+
 
 
 const Eyebrow = styled.div`
