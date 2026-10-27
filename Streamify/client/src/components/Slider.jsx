@@ -19,15 +19,18 @@ export default function Slider({ sections }) {
 const Container = styled.div`
   position: relative;
   width: 100%;
+
   background: #141414;
 
   display: flex;
   flex-direction: column;
+
   gap: 0.8rem;
 
   padding: 0 0 2rem;
 
   overflow: visible;
+
   z-index: 1;
 
   @media (max-width: 1024px) {

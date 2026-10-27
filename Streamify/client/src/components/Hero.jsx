@@ -198,7 +198,6 @@ export default function Hero({ items = [] }) {
 
 const HeroContainer = styled.section`
   position: relative;
-
   width: 100%;
 
   /* Navbar = 72px */
@@ -226,11 +225,20 @@ const HeroContainer = styled.section`
 
     background-position: center center;
   }
+
+  @media (max-width: 480px) {
+    margin-top: 58px;
+    height: calc(100vh - 58px);
+    min-height: 520px;
+
+    background-position: 60% center;
+  }
 `;
 
 const Overlay = styled.div`
   position: absolute;
   inset: 0;
+
   z-index: 1;
 
   background:
@@ -272,7 +280,7 @@ const Arrow = styled.button`
 
   background: rgba(0, 0, 0, 0.45);
 
-  color: white;
+  color: #fff;
 
   font-size: 2.5rem;
 
@@ -314,6 +322,23 @@ const Arrow = styled.button`
       right: 8px;
     }
   }
+
+  @media (max-width: 480px) {
+    width: 34px;
+    height: 60px;
+
+    font-size: 1.7rem;
+
+    border-radius: 6px;
+
+    &.left-arrow {
+      left: 5px;
+    }
+
+    &.right-arrow {
+      right: 5px;
+    }
+  }
 `;
 
 const Content = styled.div`
@@ -353,6 +378,28 @@ const Content = styled.div`
 
     text-shadow: 0 3px 15px rgba(0, 0, 0, 0.7);
   }
+
+  @media (max-width: 768px) {
+    width: 75%;
+    max-width: 75%;
+
+    margin-left: 8%;
+
+    h1 {
+      font-size: clamp(2.2rem, 8vw, 3.5rem);
+    }
+  }
+
+  @media (max-width: 480px) {
+    width: 82%;
+    max-width: 82%;
+
+    margin-left: 9%;
+
+    h1 {
+      font-size: clamp(2rem, 9vw, 3rem);
+    }
+  }
 `;
 
 const Info = styled.div`
@@ -381,6 +428,12 @@ const Info = styled.div`
 
     white-space: nowrap;
   }
+
+  @media (max-width: 480px) {
+    gap: 0.6rem;
+
+    font-size: 0.9rem;
+  }
 `;
 
 const Rating = styled.span`
@@ -400,7 +453,6 @@ const Rating = styled.span`
 
   white-space: nowrap;
 
-  /* Keeps ⭐ and rating perfectly aligned */
   height: 20px;
 
   span {
@@ -424,6 +476,20 @@ const Overview = styled.p`
   line-height: 1.6;
 
   text-shadow: 0 2px 8px rgba(0, 0, 0, 0.8);
+
+  @media (max-width: 768px) {
+    font-size: 0.95rem;
+
+    line-height: 1.5;
+  }
+
+  @media (max-width: 480px) {
+    font-size: 0.9rem;
+
+    line-height: 1.5;
+
+    margin-bottom: 1.2rem;
+  }
 `;
 
 const Buttons = styled.div`
@@ -467,13 +533,11 @@ const Buttons = styled.div`
 
   .play {
     background: #fff;
-
     color: #000;
   }
 
   .play:hover {
     background: #e6e6e6;
-
     transform: scale(1.05);
   }
 
@@ -489,6 +553,24 @@ const Buttons = styled.div`
     background: rgba(110, 110, 110, 0.9);
 
     transform: scale(1.05);
+  }
+
+  @media (max-width: 480px) {
+    gap: 0.6rem;
+
+    button {
+      min-height: 42px;
+
+      padding: 0.65rem 1rem;
+
+      font-size: 0.85rem;
+
+      gap: 0.4rem;
+
+      svg {
+        font-size: 1.1rem;
+      }
+    }
   }
 `;
 
@@ -506,6 +588,18 @@ const Dots = styled.div`
   align-items: center;
 
   gap: 8px;
+
+  @media (max-width: 768px) {
+    left: 8%;
+    bottom: 30px;
+  }
+
+  @media (max-width: 480px) {
+    left: 9%;
+    bottom: 24px;
+
+    gap: 6px;
+  }
 `;
 
 const Dot = styled.button`
@@ -533,5 +627,10 @@ const Dot = styled.button`
   &:hover {
     background: #fff;
   }
-`;
 
+  @media (max-width: 480px) {
+    width: ${(props) => (props.$active ? "22px" : "7px")};
+
+    height: 7px;
+  }
+`;

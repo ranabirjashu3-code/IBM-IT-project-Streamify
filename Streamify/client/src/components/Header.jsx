@@ -30,6 +30,7 @@ const Container = styled.header`
 
   padding: 1.5rem 4rem;
   box-sizing: border-box;
+
   z-index: 100;
 
   display: flex;
@@ -46,6 +47,7 @@ const Container = styled.header`
     height: auto;
     cursor: pointer;
     user-select: none;
+    display: block;
   }
 
   button {
@@ -86,6 +88,19 @@ const Container = styled.header`
     button {
       padding: 0.65rem 1.3rem;
       font-size: 0.9rem;
+    }
+  }
+
+  @media (max-width: 480px) {
+    padding: 0.8rem 1rem;
+
+    .logo img {
+      width: 100px;
+    }
+
+    button {
+      padding: 0.55rem 1rem;
+      font-size: 0.85rem;
     }
   }
 `;

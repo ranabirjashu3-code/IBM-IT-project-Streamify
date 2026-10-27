@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import styled from "styled-components";
 import video from "../assets/video.mp4";
@@ -6,19 +6,74 @@ import { IoPlayCircleSharp } from "react-icons/io5";
 import { RiThumbUpFill, RiThumbDownFill } from "react-icons/ri";
 import { BsCheck } from "react-icons/bs";
 import { AiOutlinePlus } from "react-icons/ai";
-import { BiChevronDown } from "react-icons/bi";
 import axios from "axios";
 import { toast } from "react-toastify";
+import { onAuthStateChanged } from "firebase/auth";
 import { firebaseAuth } from "../Utils/firebase-config";
 import { requireAuth } from "../Utils/requireAuth";
 
-export default React.memo(function Card({ movieData, isLiked = false }) {
+export default React.memo(function Card({
+  movieData,
+  isLiked = false,
+}) {
   const [isHovered, setIsHovered] = useState(false);
   const [isInWatchlist, setIsInWatchlist] = useState(isLiked);
-  const navigate = useNavigate();
   const [showFullOverview, setShowFullOverview] = useState(false);
+  const [reaction, setReaction] = useState(null);
+  const [reactionLoading, setReactionLoading] = useState(false);
 
-  // Open player with movie data
+  const navigate = useNavigate();
+
+  const API_URL = import.meta.env.VITE_API_URL;
+
+  const contentId = String(
+    movieData?.id ?? movieData?.movieId ?? ""
+  );
+
+  // Load the user's saved reaction from the backend
+  useEffect(() => {
+    let cancelled = false;
+
+    const unsubscribe = onAuthStateChanged(
+      firebaseAuth,
+      async (user) => {
+        if (!user || !contentId) {
+          if (!cancelled) {
+            setReaction(null);
+          }
+          return;
+        }
+
+        try {
+          const response = await axios.get(
+            `${API_URL}/api/interactions/${encodeURIComponent(contentId)}`
+          );
+
+          if (cancelled) return;
+
+          const likedBy = response.data.likedBy || [];
+          const dislikedBy = response.data.dislikedBy || [];
+
+          if (likedBy.includes(user.uid)) {
+            setReaction("like");
+          } else if (dislikedBy.includes(user.uid)) {
+            setReaction("dislike");
+          } else {
+            setReaction(null);
+          }
+        } catch (error) {
+          console.error("Failed to load reaction:", error);
+        }
+      }
+    );
+
+    return () => {
+      cancelled = true;
+      unsubscribe();
+    };
+  }, [contentId, API_URL]);
+
+  // Open the video player
   const handlePlay = () => {
     if (!requireAuth(navigate)) return;
 
@@ -29,27 +84,65 @@ export default React.memo(function Card({ movieData, isLiked = false }) {
     });
   };
 
-  // Add / Remove from watchlist
+  // Save Like or Dislike to the backend
+  const handleReaction = async (type, event) => {
+    event.stopPropagation();
+
+    if (reactionLoading) return;
+    if (!requireAuth(navigate)) return;
+
+    const user = firebaseAuth.currentUser;
+
+    if (!user || !contentId) {
+      toast.error("Unable to update reaction.");
+      return;
+    }
+
+    try {
+      setReactionLoading(true);
+
+      const response = await axios.post(
+        `${API_URL}/api/interactions/${encodeURIComponent(contentId)}/${type}`,
+        {
+          userId: user.uid,
+        }
+      );
+
+      if (response.data.liked) {
+        setReaction("like");
+      } else if (response.data.disliked) {
+        setReaction("dislike");
+      } else {
+        setReaction(null);
+      }
+    } catch (error) {
+      console.error("Reaction error:", error);
+      toast.error("Unable to save your reaction.");
+    } finally {
+      setReactionLoading(false);
+    }
+  };
+
+  // Add or remove from watchlist
   const handleWatchlist = async () => {
     try {
-      const user = firebaseAuth.currentUser;
-
       if (!requireAuth(navigate)) return;
 
-      // REMOVE
+      const user = firebaseAuth.currentUser;
+
+      if (!user) return;
+
       if (isInWatchlist) {
         await axios.delete(
-          `http://localhost:8080/api/watchlist/${user.uid}/${movieData.id}/${movieData.mediaType}`
+          `${API_URL}/api/watchlist/${user.uid}/${movieData.id}/${movieData.mediaType}`
         );
 
         setIsInWatchlist(false);
-
         toast.success("Removed from your watchlist.");
         return;
       }
 
-      // ADD
-      await axios.post(`${import.meta.env.VITE_API_URL}/api/watchlist`, {
+      await axios.post(`${API_URL}/api/watchlist`, {
         userId: user.uid,
         movieId: movieData.id,
         mediaType: movieData.mediaType,
@@ -63,7 +156,6 @@ export default React.memo(function Card({ movieData, isLiked = false }) {
       });
 
       setIsInWatchlist(true);
-
       toast.success("Added to your watchlist.");
     } catch (error) {
       console.error("Watchlist error:", error);
@@ -77,6 +169,9 @@ export default React.memo(function Card({ movieData, isLiked = false }) {
     }
   };
 
+  const overview = movieData?.overview || "";
+  const genres = movieData?.genres || [];
+
   return (
     <Container
       onMouseEnter={() => setIsHovered(true)}
@@ -84,24 +179,28 @@ export default React.memo(function Card({ movieData, isLiked = false }) {
     >
       <img
         className="movie-image"
-        src={`https://image.tmdb.org/t/p/w500${movieData.image}`}
-        alt={movieData.name}
+        src={
+          movieData.image
+            ? `https://image.tmdb.org/t/p/w500${movieData.image}`
+            : ""
+        }
+        alt={movieData.name || "Movie"}
       />
 
       {isHovered && (
         <div className="hover">
-
           <div className="image-video-container">
-
-            {/* Hover Image */}
             <img
               className="hover-image"
-              src={`https://image.tmdb.org/t/p/original${movieData.backdrop}`}
-              alt={movieData.name}
+              src={
+                movieData.backdrop
+                  ? `https://image.tmdb.org/t/p/original${movieData.backdrop}`
+                  : ""
+              }
+              alt={movieData.name || "Movie"}
               onClick={handlePlay}
             />
 
-            {/* Hover Video */}
             <video
               className="hover-video"
               src={video}
@@ -110,12 +209,9 @@ export default React.memo(function Card({ movieData, isLiked = false }) {
               loop
               onClick={handlePlay}
             />
-
           </div>
 
           <div className="movie-details">
-
-            {/* Movie Title */}
             <h3
               className="movie-title"
               onClick={handlePlay}
@@ -124,9 +220,8 @@ export default React.memo(function Card({ movieData, isLiked = false }) {
             </h3>
 
             <div className="movie-info">
-
               <span className="match">
-                ⭐ {movieData.rating?.toFixed(1)}
+                ⭐ {movieData.rating?.toFixed?.(1) ?? "N/A"}
               </span>
 
               <span className="year">
@@ -136,38 +231,49 @@ export default React.memo(function Card({ movieData, isLiked = false }) {
               <span className="lang">
                 {movieData.language?.toUpperCase()}
               </span>
-
             </div>
 
-            {/* Controls */}
             <div className="controls">
-
-              {/* PLAY */}
               <IoPlayCircleSharp
                 className="icon play"
                 title="Play"
                 onClick={handlePlay}
               />
 
-              {/* LIKE */}
               <RiThumbUpFill
-                className="icon"
+                className={`icon ${
+                  reaction === "like" ? "reaction-active" : ""
+                }`}
                 title="Like"
-                onClick={() => {
-                  if (!requireAuth(navigate)) return;
+                role="button"
+                aria-label="Like"
+                aria-pressed={reaction === "like"}
+                onClick={(event) =>
+                  handleReaction("like", event)
+                }
+                style={{
+                  opacity: reactionLoading ? 0.5 : 1,
+                  pointerEvents: reactionLoading ? "none" : "auto",
                 }}
               />
 
-              {/* DISLIKE */}
               <RiThumbDownFill
-                className="icon"
+                className={`icon ${
+                  reaction === "dislike" ? "reaction-active" : ""
+                }`}
                 title="Dislike"
-                onClick={() => {
-                  if (!requireAuth(navigate)) return;
+                role="button"
+                aria-label="Dislike"
+                aria-pressed={reaction === "dislike"}
+                onClick={(event) =>
+                  handleReaction("dislike", event)
+                }
+                style={{
+                  opacity: reactionLoading ? 0.5 : 1,
+                  pointerEvents: reactionLoading ? "none" : "auto",
                 }}
               />
 
-              {/* WATCHLIST */}
               {isInWatchlist ? (
                 <BsCheck
                   className="icon"
@@ -181,18 +287,16 @@ export default React.memo(function Card({ movieData, isLiked = false }) {
                   onClick={handleWatchlist}
                 />
               )}
-
             </div>
 
-            {/* Overview */}
             <p className="overview">
               {showFullOverview
-                ? movieData.overview
-                : movieData.overview.length > 120
-                  ? movieData.overview.substring(0, 120)
-                  : movieData.overview}
+                ? overview
+                : overview.length > 120
+                  ? overview.substring(0, 120)
+                  : overview}
 
-              {movieData.overview.length > 120 && (
+              {overview.length > 120 && (
                 <span
                   className="read-more"
                   onClick={() =>
@@ -206,20 +310,17 @@ export default React.memo(function Card({ movieData, isLiked = false }) {
               )}
             </p>
 
-            {/* Genres */}
             <ul className="genres">
-              {movieData.genres.map((genre) => (
+              {genres.map((genre) => (
                 <li key={genre}>{genre}</li>
               ))}
             </ul>
-
           </div>
         </div>
       )}
     </Container>
   );
 });
-
 
 
 const Container = styled.div`
@@ -232,6 +333,13 @@ const Container = styled.div`
   transition: transform 0.35s ease;
   transform-origin: center center;
 
+  .icon.reaction-active {
+    background: #46d369;
+    color: #111;
+    border-color: #46d369;
+  }
+
+  /* Main movie image */
   .movie-image {
     width: 100%;
     height: 100%;
@@ -240,37 +348,46 @@ const Container = styled.div`
     display: block;
   }
 
+  /* Card hover */
   &:hover {
     transform: scale(1.12);
     z-index: 99999;
   }
 
+  /* Hover popup - fixed positioning */
   .hover {
     position: absolute;
-    top: -35px;
-    left: 50%;
-    transform: translateX(-50%);
+    top: -10px;
+    left: 0;
+
     width: 360px;
+    max-width: calc(100vw - 24px);
+    box-sizing: border-box;
+
     background: #181818;
     border-radius: 12px;
     overflow: hidden;
+
     box-shadow: 0 18px 45px rgba(0, 0, 0, 0.85);
+
     animation: popup 0.25s ease forwards;
     z-index: 999999;
   }
 
+  /* Popup animation */
   @keyframes popup {
     from {
       opacity: 0;
-      transform: translateX(-50%) scale(0.92);
+      transform: scale(0.96);
     }
 
     to {
       opacity: 1;
-      transform: translateX(-50%) scale(1);
+      transform: scale(1);
     }
   }
 
+  /* Image / video container */
   .image-video-container {
     width: 100%;
     height: 200px;
@@ -284,6 +401,7 @@ const Container = styled.div`
     width: 100%;
     height: 100%;
     object-fit: cover;
+    display: block;
   }
 
   .hover-video {
@@ -291,24 +409,32 @@ const Container = styled.div`
     inset: 0;
   }
 
+  /* Movie details */
   .movie-details {
     padding: 1rem;
+    box-sizing: border-box;
+    min-width: 0;
   }
 
+  /* Movie title */
   .movie-title {
     color: #fff;
     font-size: 1.15rem;
     font-weight: 700;
     margin-bottom: 0.8rem;
     cursor: pointer;
+    line-height: 1.3;
+    overflow-wrap: anywhere;
   }
 
+  /* Movie information */
   .movie-info {
     display: flex;
     align-items: center;
     gap: 0.7rem;
     margin-bottom: 0.9rem;
     font-size: 0.85rem;
+    flex-wrap: wrap;
   }
 
   .match {
@@ -321,49 +447,57 @@ const Container = styled.div`
     color: #d2d2d2;
   }
 
- .overview {
-  color: #d0d0d0;
-  font-size: 0.9rem;
-  line-height: 1.5;
-  margin-bottom: 1rem;
-  word-break: break-word;
-  overflow-wrap: break-word;
-  transition: all 0.3s ease;
-}
+  /* Overview */
+  .overview {
+    color: #d0d0d0;
+    font-size: 0.9rem;
+    line-height: 1.5;
+    margin-bottom: 1rem;
+    word-break: break-word;
+    overflow-wrap: anywhere;
+    transition: all 0.3s ease;
+    display: -webkit-box;
+    -webkit-box-orient: vertical;
+    -webkit-line-clamp: 3;
+    overflow: hidden;
+  }
 
-.read-more {
-  color: #46d369;
-  font-weight: 600;
-  cursor: pointer;
-  margin-left: 4px;
-  text-decoration: none;
-  transition: color 0.25s ease;
-}
+  /* Read more */
+  .read-more {
+    color: #46d369;
+    font-weight: 600;
+    cursor: pointer;
+    margin-left: 4px;
+    text-decoration: none;
+    transition: color 0.25s ease;
+  }
 
-.read-more:hover {
-  color: #7ef0a0;
-  text-decoration: none;
-}
+  .read-more:hover {
+    color: #7ef0a0;
+    text-decoration: none;
+  }
 
+  /* Controls */
   .controls {
     display: flex;
     align-items: center;
     gap: 0.7rem;
     margin-bottom: 1rem;
+    flex-wrap: wrap;
   }
 
+  /* Icon buttons */
   .icon {
     width: 38px;
     height: 38px;
     padding: 7px;
-
+    box-sizing: border-box;
     border-radius: 50%;
     border: 2px solid rgba(255, 255, 255, 0.35);
-
     color: white;
     cursor: pointer;
-
     transition: all 0.25s ease;
+    flex-shrink: 0;
   }
 
   .icon:hover {
@@ -373,6 +507,18 @@ const Container = styled.div`
     transform: scale(1.08);
   }
 
+  .icon.reaction-active {
+    background: #46d369;
+    color: #111;
+    border-color: #46d369;
+  }
+
+  .icon.reaction-active:hover {
+    background: #7ef0a0;
+    border-color: #7ef0a0;
+  }
+
+  /* Play button */
   .play {
     background: white;
     color: black;
@@ -383,10 +529,12 @@ const Container = styled.div`
     background: #e5e5e5;
   }
 
+  /* More button */
   .more {
     margin-left: auto;
   }
 
+  /* Genres */
   .genres {
     display: flex;
     flex-wrap: wrap;
@@ -400,6 +548,8 @@ const Container = styled.div`
     color: #46d369;
     font-size: 0.82rem;
     font-weight: 600;
+    white-space: normal;
+    overflow-wrap: anywhere;
   }
 
   .genres li::after {
@@ -412,42 +562,102 @@ const Container = styled.div`
     display: none;
   }
 
+  /* Large desktop: 1440px+ */
+  @media (min-width: 1440px) {
+    width: 175px;
+    height: 263px;
+
+    .hover {
+      width: 380px;
+    }
+
+    .image-video-container {
+      height: 210px;
+    }
+
+    .movie-title {
+      font-size: 1.2rem;
+    }
+  }
+
+  /* Laptop: up to 1024px */
   @media (max-width: 1024px) {
     width: 150px;
     height: 225px;
 
     .hover {
       width: 330px;
+      max-width: calc(100vw - 24px);
     }
 
     .image-video-container {
       height: 185px;
     }
 
+    .movie-details {
+      padding: 0.9rem;
+    }
+
     .movie-title {
       font-size: 1rem;
     }
+
+    .movie-info {
+      font-size: 0.8rem;
+    }
+
+    .overview {
+      font-size: 0.85rem;
+    }
+
+    .icon {
+      width: 35px;
+      height: 35px;
+      padding: 6px;
+    }
   }
 
+  /* Tablet: up to 768px */
   @media (max-width: 768px) {
-    width: 130px;
-    height: 195px;
+    width: 135px;
+    height: 203px;
 
     .hover {
       width: 300px;
+      max-width: calc(100vw - 24px);
+      top: -10px;
     }
 
     .image-video-container {
-      height: 170px;
+      height: 165px;
+    }
+
+    .movie-details {
+      padding: 0.85rem;
     }
 
     .movie-title {
       font-size: 0.95rem;
+      line-height: 1.25;
+      margin-bottom: 0.6rem;
+    }
+
+    .movie-info {
+      gap: 0.5rem;
+      font-size: 0.78rem;
+      margin-bottom: 0.7rem;
     }
 
     .overview {
       font-size: 0.82rem;
+      line-height: 1.4;
       -webkit-line-clamp: 2;
+      margin-bottom: 0.8rem;
+    }
+
+    .controls {
+      gap: 0.5rem;
+      margin-bottom: 0.8rem;
     }
 
     .icon {
@@ -455,5 +665,165 @@ const Container = styled.div`
       height: 32px;
       padding: 6px;
     }
+
+    .genres {
+      gap: 0.35rem;
+    }
+
+    .genres li {
+      font-size: 0.75rem;
+    }
+
+    .genres li::after {
+      margin-left: 5px;
+    }
+  }
+
+  /* Mobile: 361px–480px */
+  @media (max-width: 480px) {
+    width: 125px;
+    height: 188px;
+
+    .hover {
+      width: min(280px, calc(100vw - 24px));
+      max-width: calc(100vw - 24px);
+      left: 0;
+      top: -10px;
+      border-radius: 10px;
+    }
+
+    .image-video-container {
+      height: 150px;
+    }
+
+    .movie-details {
+      padding: 0.75rem;
+    }
+
+    .movie-title {
+      font-size: 0.9rem;
+      line-height: 1.25;
+      margin-bottom: 0.55rem;
+    }
+
+    .movie-info {
+      gap: 0.4rem;
+      font-size: 0.72rem;
+      margin-bottom: 0.65rem;
+    }
+
+    .overview {
+      font-size: 0.78rem;
+      line-height: 1.4;
+      -webkit-line-clamp: 2;
+      margin-bottom: 0.7rem;
+    }
+
+    .controls {
+      gap: 0.45rem;
+      margin-bottom: 0.7rem;
+    }
+
+    .icon {
+      width: 30px;
+      height: 30px;
+      padding: 5px;
+    }
+
+    .genres {
+      gap: 0.25rem;
+    }
+
+    .genres li {
+      font-size: 0.7rem;
+    }
+
+    .genres li::after {
+      margin-left: 5px;
+    }
+  }
+
+  /* Small mobile: 320px–360px */
+  @media (max-width: 360px) {
+    width: 115px;
+    height: 173px;
+
+    .hover {
+      width: min(260px, calc(100vw - 20px));
+      max-width: calc(100vw - 20px);
+      left: 0;
+      top: -10px;
+    }
+
+    .image-video-container {
+      height: 140px;
+    }
+
+    .movie-details {
+      padding: 0.65rem;
+    }
+
+    .movie-title {
+      font-size: 0.85rem;
+      margin-bottom: 0.5rem;
+    }
+
+    .movie-info {
+      gap: 0.3rem;
+      font-size: 0.68rem;
+    }
+
+    .overview {
+      font-size: 0.75rem;
+      line-height: 1.35;
+    }
+
+    .controls {
+      gap: 0.35rem;
+    }
+
+    .icon {
+      width: 28px;
+      height: 28px;
+      padding: 4px;
+    }
+
+    .genres {
+      gap: 0.2rem;
+    }
+
+    .genres li {
+      font-size: 0.67rem;
+    }
+  }
+
+  /* Touch devices */
+  @media (hover: none) and (pointer: coarse) {
+    &:hover {
+      transform: none;
+    }
+
+    .icon:hover {
+      background: transparent;
+      color: white;
+      border-color: rgba(255, 255, 255, 0.35);
+      transform: none;
+    }
+
+    .icon.reaction-active:hover {
+      background: #46d369;
+      color: #111;
+      border-color: #46d369;
+    }
+
+    .play:hover {
+      background: white;
+      color: black;
+    }
+
+    .read-more:hover {
+      color: #46d369;
+    }
   }
 `;
+

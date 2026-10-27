@@ -1,78 +1,421 @@
-/* Main Toast */
-.Toastify__toast {
-  background: rgba(18, 18, 22, 0.95) !important;
-  backdrop-filter: blur(18px);
+/* =========================================================
+   STREAMIFY — REACT TOASTIFY
+========================================================= */
 
-  border-radius: 16px;
+
+/* =========================================================
+   TOAST CONTAINER
+========================================================= */
+
+.Toastify__toast-container {
+  z-index: 99999 !important;
+
+  width: auto;
+
+  padding: 0;
+
+  box-sizing: border-box;
+}
+
+
+/* =========================================================
+   MAIN TOAST
+========================================================= */
+
+.Toastify__toast {
+  min-height: 64px;
+
+  padding: 14px 16px;
+
+  box-sizing: border-box;
+
+  background: rgba(18, 18, 22, 0.96) !important;
+
+  color: #ffffff !important;
+
   border: 1px solid rgba(255, 255, 255, 0.08);
 
-  color: white !important;
+  border-radius: 14px;
 
   font-family: "Poppins", sans-serif;
+
   font-size: 15px;
+
   font-weight: 500;
 
+  line-height: 1.4;
+
   box-shadow:
-    0 12px 35px rgba(0,0,0,.45),
-    0 0 25px rgba(0,255,255,.08);
+    0 14px 40px rgba(0, 0, 0, 0.5),
+    0 0 25px rgba(0, 229, 255, 0.06);
 
-  padding: 14px;
+  backdrop-filter: blur(18px);
+  -webkit-backdrop-filter: blur(18px);
+
+  overflow: hidden;
 }
 
-/* Body */
+
+/* =========================================================
+   TOAST BODY
+========================================================= */
+
 .Toastify__toast-body {
-  color: white;
+  margin: 0;
+
+  padding: 0;
+
+  display: flex;
+
+  align-items: center;
+
+  gap: 10px;
+
+  color: #ffffff !important;
 }
 
-/* Close Button */
+
+/* =========================================================
+   TOAST ICON
+========================================================= */
+
+.Toastify__toast-icon {
+  width: 24px;
+
+  min-width: 24px;
+
+  margin-inline-end: 4px;
+}
+
+.Toastify__toast-icon svg {
+  width: 22px;
+  height: 22px;
+}
+
+
+/* =========================================================
+   CLOSE BUTTON
+========================================================= */
+
 .Toastify__close-button {
-  color: white !important;
-  opacity: 1;
+  align-self: center;
+
+  width: 24px;
+  height: 24px;
+
+  padding: 3px;
+
+  margin-left: 8px;
+
+  color: rgba(255, 255, 255, 0.75) !important;
+
+  opacity: 1 !important;
+
+  transition:
+    color 0.2s ease,
+    transform 0.2s ease,
+    opacity 0.2s ease;
 }
 
-/* Progress Bar */
+.Toastify__close-button:hover {
+  color: #ffffff !important;
+
+  opacity: 1 !important;
+
+  transform: scale(1.1);
+}
+
+
+/* =========================================================
+   PROGRESS BAR
+========================================================= */
+
 .Toastify__progress-bar {
+  height: 3px;
+
   background: linear-gradient(
     90deg,
     #00e5ff,
     #7b61ff,
     #ff2d55
   ) !important;
+
+  opacity: 1;
 }
 
-/* SUCCESS */
+
+/* =========================================================
+   SUCCESS
+========================================================= */
+
 .Toastify__toast--success {
-  border-left: 5px solid #00ff88;
+  border-left: 4px solid #00ff88;
 }
 
-/* ERROR */
+.Toastify__toast--success
+.Toastify__toast-icon {
+  color: #00ff88;
+}
+
+
+/* =========================================================
+   ERROR
+========================================================= */
+
 .Toastify__toast--error {
-  border-left: 5px solid #ff3b5c;
+  border-left: 4px solid #ff3b5c;
 }
 
-/* WARNING */
+.Toastify__toast--error
+.Toastify__toast-icon {
+  color: #ff3b5c;
+}
+
+
+/* =========================================================
+   WARNING
+========================================================= */
+
 .Toastify__toast--warning {
-  border-left: 5px solid #ffb300;
+  border-left: 4px solid #ffb300;
 }
 
-/* INFO */
+.Toastify__toast--warning
+.Toastify__toast-icon {
+  color: #ffb300;
+}
+
+
+/* =========================================================
+   INFO
+========================================================= */
+
 .Toastify__toast--info {
-  border-left: 5px solid #00c8ff;
+  border-left: 4px solid #00c8ff;
 }
 
-/* Icons */
-.Toastify__toast-icon svg {
-  width: 22px;
-  height: 22px;
+.Toastify__toast--info
+.Toastify__toast-icon {
+  color: #00c8ff;
 }
 
-/* Toast position */
-.Toastify__toast-container {
-  z-index: 99999 !important;
+
+/* =========================================================
+   DEFAULT
+========================================================= */
+
+.Toastify__toast--default {
+  border-left: 4px solid #7b61ff;
 }
 
-/* Keep toast below the navbar */
+
+/* =========================================================
+   TOP RIGHT
+========================================================= */
+
 .Toastify__toast-container--top-right {
   top: 85px !important;
+
   right: 20px !important;
+}
+
+
+/* =========================================================
+   TOP LEFT
+========================================================= */
+
+.Toastify__toast-container--top-left {
+  top: 85px !important;
+
+  left: 20px !important;
+}
+
+
+/* =========================================================
+   TOP CENTER
+========================================================= */
+
+.Toastify__toast-container--top-center {
+  top: 85px !important;
+}
+
+
+/* =========================================================
+   BOTTOM RIGHT
+========================================================= */
+
+.Toastify__toast-container--bottom-right {
+  right: 20px !important;
+
+  bottom: 20px !important;
+}
+
+
+/* =========================================================
+   BOTTOM LEFT
+========================================================= */
+
+.Toastify__toast-container--bottom-left {
+  left: 20px !important;
+
+  bottom: 20px !important;
+}
+
+
+/* =========================================================
+   BOTTOM CENTER
+========================================================= */
+
+.Toastify__toast-container--bottom-center {
+  bottom: 20px !important;
+}
+
+
+/* =========================================================
+   MOBILE
+========================================================= */
+
+@media (max-width: 768px) {
+
+  .Toastify__toast-container {
+    width: calc(100% - 24px);
+
+    left: 12px;
+    right: 12px;
+
+    padding: 0;
+  }
+
+
+  /* TOP RIGHT */
+
+  .Toastify__toast-container--top-right {
+    top: 72px !important;
+
+    right: 12px !important;
+    left: 12px !important;
+  }
+
+
+  /* TOP LEFT */
+
+  .Toastify__toast-container--top-left {
+    top: 72px !important;
+
+    left: 12px !important;
+    right: 12px !important;
+  }
+
+
+  /* TOP CENTER */
+
+  .Toastify__toast-container--top-center {
+    top: 72px !important;
+
+    left: 12px !important;
+    right: 12px !important;
+
+    transform: none;
+  }
+
+
+  .Toastify__toast {
+    width: 100%;
+
+    min-height: 58px;
+
+    margin-bottom: 8px;
+
+    padding: 12px 14px;
+
+    border-radius: 12px;
+
+    font-size: 14px;
+  }
+
+
+  .Toastify__toast-body {
+    gap: 8px;
+  }
+
+
+  .Toastify__toast-icon {
+    width: 21px;
+
+    min-width: 21px;
+  }
+
+
+  .Toastify__toast-icon svg {
+    width: 20px;
+    height: 20px;
+  }
+
+
+  .Toastify__close-button {
+    width: 22px;
+    height: 22px;
+  }
+}
+
+
+/* =========================================================
+   SMALL MOBILE
+========================================================= */
+
+@media (max-width: 480px) {
+
+  .Toastify__toast-container {
+    width: calc(100% - 16px);
+
+    left: 8px;
+    right: 8px;
+  }
+
+
+  .Toastify__toast-container--top-right,
+  .Toastify__toast-container--top-left,
+  .Toastify__toast-container--top-center {
+    top: 68px !important;
+
+    left: 8px !important;
+    right: 8px !important;
+  }
+
+
+  .Toastify__toast {
+    min-height: 54px;
+
+    padding: 10px 12px;
+
+    border-radius: 11px;
+
+    font-size: 13px;
+  }
+
+
+  .Toastify__toast-icon {
+    width: 20px;
+
+    min-width: 20px;
+  }
+
+
+  .Toastify__toast-icon svg {
+    width: 18px;
+    height: 18px;
+  }
+}
+
+
+/* =========================================================
+   ACCESSIBILITY
+========================================================= */
+
+@media (prefers-reduced-motion: reduce) {
+
+  .Toastify__toast,
+  .Toastify__close-button {
+    transition: none;
+  }
 }

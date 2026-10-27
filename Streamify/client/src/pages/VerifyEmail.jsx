@@ -10,7 +10,7 @@ import {
     reload,
 } from "firebase/auth";
 
-import { firebaseAuth } from "../utils/firebase-config";
+import { firebaseAuth } from "../Utils/firebase-config";
 
 import styled from "styled-components";
 import { toast } from "react-toastify";

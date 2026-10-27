@@ -12,6 +12,7 @@ export default function BackgroundImage() {
   );
 }
 
+
 const Container = styled.div`
   position: fixed;
   inset: 0;
@@ -22,6 +23,7 @@ const Container = styled.div`
     width: 100%;
     height: 100%;
     object-fit: cover;
+    object-position: center;
   }
 
   .overlay {
@@ -29,4 +31,23 @@ const Container = styled.div`
     inset: 0;
     background: rgba(0, 0, 0, 0.55);
   }
+
+  /* Tablet */
+  @media (max-width: 768px) {
+    img {
+      object-position: center;
+    }
+  }
+
+  /* Mobile */
+  @media (max-width: 480px) {
+    img {
+      object-position: center;
+    }
+
+    .overlay {
+      background: rgba(0, 0, 0, 0.6);
+    }
+  }
 `;
+

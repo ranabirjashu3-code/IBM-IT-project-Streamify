@@ -10,6 +10,7 @@ import Movies from "./pages/Movies";
 import TVShows from "./pages/TVShows";
 import Anime from "./pages/Anime";
 import Watchlist from "./pages/Watchlist";
+import Search from "./pages/Search";
 import VerifyEmail from "./pages/VerifyEmail";
 
 import { firebaseAuth } from "./Utils/firebase-config";
@@ -91,6 +92,7 @@ function App() {
         <Route path="/player" element={<Player />} />
 
         <Route path="/verify-email" element={<VerifyEmail />} />
+        <Route path="/search" element={<Search />} />
       </Routes>
     </BrowserRouter>
   );

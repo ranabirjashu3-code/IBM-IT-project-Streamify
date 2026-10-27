@@ -64,12 +64,13 @@ export default function Watchlist() {
 
     const removeFromWatchlist = async (movie) => {
         const user = firebaseAuth.currentUser;
+        const API_URL = import.meta.env.VITE_API_URL;
 
         if (!user) return;
 
         try {
             await axios.delete(
-                `http://localhost:8080/api/watchlist/${user.uid}/${movie.movieId}/${movie.mediaType}`
+                `${API_URL}/api/watchlist/${user.uid}/${movie.movieId}/${movie.mediaType}`
             );
 
             setWatchlist((prev) =>
