@@ -12,6 +12,7 @@ export default function PlayerRecommendations({ movie }) {
   const [error, setError] = useState("");
 
   const API_URL = import.meta.env.VITE_API_URL;
+
   const movieId = movie?.id ?? movie?.movieId;
 
   const mediaType =
@@ -22,59 +23,72 @@ export default function PlayerRecommendations({ movie }) {
   useEffect(() => {
     if (!movieId || !API_URL) {
       setItems([]);
+      setLoading(false);
       return;
     }
 
     let cancelled = false;
 
-    async function loadRecommendations() {
+    async function fetchSimilarTitles() {
       setLoading(true);
       setError("");
       setItems([]);
 
       try {
+        // Fetch titles similar to the currently playing title only.
         const response = await axios.get(
           `${API_URL}/api/tmdb/recommendations/${mediaType}/${movieId}`
         );
 
         if (cancelled) return;
 
-        const results = (response.data?.results || [])
+        const results = response.data?.results || [];
+
+        const formattedItems = results
           .filter(
             (item) =>
               String(item.id) !== String(movieId) &&
               item.poster_path
           )
-          .slice(0, 10)
           .map((item) => ({
             ...item,
             id: item.id,
             mediaType: item.media_type || mediaType,
-            name: item.title || item.name || "Untitled",
+            name:
+              item.title ||
+              item.name ||
+              item.original_title ||
+              item.original_name ||
+              "Untitled",
             image: item.poster_path,
             backdrop: item.backdrop_path || "",
+            overview: item.overview || "",
             rating: Number(item.vote_average || 0),
             releaseDate:
-              item.release_date || item.first_air_date || "",
-            overview: item.overview || "",
+              item.release_date ||
+              item.first_air_date ||
+              "",
+            language: item.original_language || "",
           }));
 
-        setItems(results);
+        setItems(formattedItems.slice(0, 10));
       } catch (err) {
         console.error(
-          "Player recommendations:",
+          "Failed to fetch similar titles:",
           err.response?.data || err.message
         );
 
         if (!cancelled) {
-          setError("Recommendations could not be loaded.");
+          setError("Unable to load similar titles.");
         }
       } finally {
-        if (!cancelled) setLoading(false);
+        if (!cancelled) {
+          setLoading(false);
+        }
       }
     }
 
-    loadRecommendations();
+    fetchSimilarTitles();
 
     return () => {
       cancelled = true;
@@ -85,18 +99,22 @@ export default function PlayerRecommendations({ movie }) {
 
   return (
     <Container>
-      <Eyebrow>STREAMIFY DISCOVERY</Eyebrow>
+      <Eyebrow>RELATED CONTENT</Eyebrow>
 
       <Heading>More Like This</Heading>
 
       <Subtitle>
-        Because you're watching{" "}
-        {movie?.name || movie?.title || "this title"}
+        Similar to{" "}
+        {movie?.name || movie?.title || "the current title"}
       </Subtitle>
 
-      {loading && <Status>Finding similar titles...</Status>}
+      {loading && (
+        <Status>Finding similar titles...</Status>
+      )}
 
-      {!loading && error && <Status>{error}</Status>}
+      {!loading && error && (
+        <Status>{error}</Status>
+      )}
 
       {!loading && !error && items.length === 0 && (
         <Status>No similar titles found.</Status>
@@ -125,7 +143,7 @@ export default function PlayerRecommendations({ movie }) {
               <Meta>
                 ★ {item.rating.toFixed(1)}
                 {item.releaseDate &&
-                  `  ·  ${item.releaseDate.slice(0, 4)}`}
+                  ` · ${item.releaseDate.slice(0, 4)}`}
               </Meta>
 
               <Overview>{item.overview}</Overview>
@@ -177,7 +195,7 @@ const List = styled.div`
 
 const Recommendation = styled.button`
   display: grid;
-  grid-template-columns: 78px minmax(0, 1fr);
+  grid-template-columns: 70px minmax(0, 1fr);
   align-items: start;
   gap: 12px;
   width: 100%;
@@ -201,8 +219,8 @@ const Recommendation = styled.button`
 
 const Poster = styled.img`
   display: block;
-  width: 78px;
-  height: 116px;
+  width: 70px;
+  height: 105px;
   object-fit: cover;
   border-radius: 7px;
   background: #222;
@@ -215,10 +233,9 @@ const Details = styled.div`
 
 const Name = styled.h3`
   margin: 0 0 7px;
-  font-size: 0.92rem;
+  font-size: 0.9rem;
   line-height: 1.4;
   overflow-wrap: anywhere;
-  transition: color 0.2s ease;
 `;
 
 const Meta = styled.p`
@@ -230,7 +247,7 @@ const Meta = styled.p`
 const Overview = styled.p`
   display: -webkit-box;
   -webkit-box-orient: vertical;
-  -webkit-line-clamp: 3;
+  -webkit-line-clamp: 2;
   overflow: hidden;
   margin: 0;
   color: #a5a5a5;
