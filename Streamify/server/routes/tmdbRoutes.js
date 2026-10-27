@@ -25,6 +25,7 @@ const allowedPaths = [
 
     "/discover/movie",
     "/discover/tv",
+    "/search/multi",
 ];
 
 
