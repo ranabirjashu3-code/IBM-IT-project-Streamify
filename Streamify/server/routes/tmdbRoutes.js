@@ -4,6 +4,52 @@ import tmdb from "../services/tmdb.js";
 const router = express.Router();
 
 
+
+router.get(
+    "/recommendations/:mediaType/:id",
+    async (req, res) => {
+        try {
+            const { mediaType, id } = req.params;
+
+            // Allow movies and TV shows only
+            if (!["movie", "tv"].includes(mediaType)) {
+                return res.status(400).json({
+                    message: "Media type must be movie or tv",
+                });
+            }
+
+            // Validate the TMDB ID
+            if (!/^\d+$/.test(id) || Number(id) <= 0) {
+                return res.status(400).json({
+                    message: "A valid TMDB ID is required",
+                });
+            }
+
+            // Fetch recommendations for the selected title
+            const response = await tmdb.get(
+                `/${mediaType}/${id}/recommendations`,
+                {
+                    params: { page: 1 },
+                }
+            );
+
+            return res.json(response.data);
+        } catch (error) {
+            console.error(
+                "Player Recommendation Error:",
+                error.response?.data || error.message
+            );
+
+            return res.status(
+                error.response?.status || 500
+            ).json({
+                message: "Failed to fetch recommendations",
+            });
+        }
+    }
+);
+
+
 // ========================================
 // ALLOWED TMDB PATHS
 // ========================================
