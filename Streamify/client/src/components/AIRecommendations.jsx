@@ -126,16 +126,6 @@ export default function AIRecommendations() {
 
   return (
     <Section>
-      <Header>
-        <div>
-          <Eyebrow>PERSONALIZED FOR YOU</Eyebrow>
-          <Title>AI Picks For You ✦</Title>
-          <Description>
-            Discover movies and shows selected for your interests.
-          </Description>
-        </div>
-      </Header>
-
       {loading && (
         <Status>Finding your next favorite...</Status>
       )}
@@ -170,16 +160,6 @@ const Section = styled.section`
   overflow: hidden;
 `;
 
-const Header = styled.div`
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  margin: 0 1.8rem 1rem;
-
-  @media (max-width: 600px) {
-    margin: 0 1rem 1rem;
-  }
-`;
 
 const Eyebrow = styled.div`
   color: #a78bfa;
