@@ -7,6 +7,7 @@ import styled from "styled-components";
 import Footer from "../components/Footer";
 import Hero from "../components/Hero";
 import ContinueWatching from "../components/ContinueWatching";
+import AIRecommendations from "../components/AIRecommendations";
 
 
 export default function Home() {
@@ -102,6 +103,7 @@ export default function Home() {
     <Hero items={heroItems} />
 
     <ContinueWatching />
+    <AIRecommendations />
 
     <Slider
       sections={[
