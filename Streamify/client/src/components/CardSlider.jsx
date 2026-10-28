@@ -1,44 +1,84 @@
-import React, { useState } from "react";
-import Card from "./Card";
-import styled from "styled-components";
-import { useRef } from "react";
-import { AiOutlineLeft, AiOutlineRight } from "react-icons/ai";
 
-export default React.memo(function CardSlider({ data, title }) {
+import React, { useEffect, useRef, useState } from "react";
+import styled from "styled-components";
+import { AiOutlineLeft, AiOutlineRight } from "react-icons/ai";
+import Card from "./Card";
+
+export default React.memo(function CardSlider({ data = [], title }) {
   const [showControls, setShowControls] = useState(false);
   const [sliderPosition, setSliderPosition] = useState(0);
 
   const listRef = useRef(null);
+  const viewportRef = useRef(null);
 
-  const cardWidth = 179; // card width + gap
-  const visibleCards = 8;
+  // Calculate the maximum distance the cards can slide.
+  const getMaxOffset = () => {
+    const slider = listRef.current;
+    const viewport = viewportRef.current;
+
+    if (!slider || !viewport) return 0;
+
+    const styles = window.getComputedStyle(viewport);
+    const paddingLeft = parseFloat(styles.paddingLeft) || 0;
+    const paddingRight = parseFloat(styles.paddingRight) || 0;
+
+    const availableWidth =
+      viewport.clientWidth - paddingLeft - paddingRight;
+
+    return Math.max(0, slider.scrollWidth - availableWidth);
+  };
+
+  // Calculate the width of one card plus its actual CSS gap.
+  const getStepSize = () => {
+    const slider = listRef.current;
+
+    if (!slider || !slider.children.length) return 179;
+
+    const firstCard = slider.children[0];
+    const cardWidth = firstCard.getBoundingClientRect().width;
+    const styles = window.getComputedStyle(slider);
+    const gap = parseFloat(styles.columnGap) || 0;
+
+    return cardWidth + gap;
+  };
 
   const handleDirection = (direction) => {
-    if (!listRef.current) return;
+    const maxOffset = getMaxOffset();
+    const stepSize = getStepSize();
 
-    if (direction === "left" && sliderPosition > 0) {
-      const newPosition = sliderPosition - 1;
+    setSliderPosition((currentPosition) => {
+      const nextPosition =
+        direction === "right"
+          ? currentPosition + stepSize
+          : currentPosition - stepSize;
 
-      setSliderPosition(newPosition);
-
-      listRef.current.style.transform = `translateX(-${
-        newPosition * cardWidth
-      }px)`;
-    }
-
-    if (
-      direction === "right" &&
-      sliderPosition < data.length - visibleCards
-    ) {
-      const newPosition = sliderPosition + 1;
-
-      setSliderPosition(newPosition);
-
-      listRef.current.style.transform = `translateX(-${
-        newPosition * cardWidth
-      }px)`;
-    }
+      return Math.max(0, Math.min(nextPosition, maxOffset));
+    });
   };
+
+  // Reset when the recommendation list changes.
+  useEffect(() => {
+    setSliderPosition(0);
+  }, [data.length]);
+
+  // Keep the slider position valid after a browser resize.
+  useEffect(() => {
+    const handleResize = () => {
+      setSliderPosition((currentPosition) =>
+        Math.min(currentPosition, getMaxOffset())
+      );
+    };
+
+    window.addEventListener("resize", handleResize);
+
+    return () => {
+      window.removeEventListener("resize", handleResize);
+    };
+  }, []);
+
+  const maxOffset = getMaxOffset();
+  const canScrollLeft = sliderPosition > 0;
+  const canScrollRight = sliderPosition < maxOffset - 1;
 
   return (
     <Container
@@ -49,17 +89,27 @@ export default React.memo(function CardSlider({ data, title }) {
 
       <div className="wrapper">
         <button
-          className={`slider-action left ${!showControls ? "hide" : ""}`}
+          type="button"
+          aria-label="Scroll left"
+          className={`slider-action left ${
+            !showControls || !canScrollLeft ? "hide" : ""
+          }`}
           onClick={() => handleDirection("left")}
         >
           <AiOutlineLeft />
         </button>
 
-        <div className="slider-container">
-          <div className="slider" ref={listRef}>
-            {data?.map((movie) => (
+        <div className="slider-container" ref={viewportRef}>
+          <div
+            className="slider"
+            ref={listRef}
+            style={{
+              transform: `translateX(-${sliderPosition}px)`,
+            }}
+          >
+            {data.map((movie) => (
               <Card
-                key={movie.id}
+                key={`${movie.mediaType || "movie"}-${movie.id}`}
                 movieData={movie}
               />
             ))}
@@ -67,7 +117,11 @@ export default React.memo(function CardSlider({ data, title }) {
         </div>
 
         <button
-          className={`slider-action right ${!showControls ? "hide" : ""}`}
+          type="button"
+          aria-label="Scroll right"
+          className={`slider-action right ${
+            !showControls || !canScrollRight ? "hide" : ""
+          }`}
           onClick={() => handleDirection("right")}
         >
           <AiOutlineRight />
@@ -75,16 +129,13 @@ export default React.memo(function CardSlider({ data, title }) {
       </div>
     </Container>
   );
-})
-
-
-
+});
 
 const Container = styled.div`
   position: relative;
+  z-index: 1;
   margin: 0.15rem 0;
   overflow: visible;
-  z-index: 1;
 
   &:hover {
     z-index: 99999;
@@ -106,39 +157,33 @@ const Container = styled.div`
     position: relative;
     width: 100%;
     overflow: visible;
-    z-index: 1;
-  }
-
-  .wrapper:hover {
-    z-index: 99999;
   }
 
   .slider-container {
     position: relative;
     width: 100%;
-    overflow: visible;
+    box-sizing: border-box;
     padding: 0.3rem 1rem;
-    touch-action: pan-x;
-    -webkit-overflow-scrolling: touch;
-    overscroll-behavior-x: contain;
+
+    /*
+      Clip horizontal overflow so only the current cards show.
+      Keep vertical overflow visible for hover popups.
+    */
+    overflow-x: clip;
+    overflow-y: visible;
   }
 
   .slider {
+    position: relative;
     display: flex;
     align-items: center;
     gap: 14px;
     width: max-content;
-    transition: transform 0.55s ease;
+    transition: transform 0.45s ease;
     will-change: transform;
     overflow: visible;
     user-select: none;
     -webkit-user-select: none;
-    touch-action: pan-x;
-    cursor: grab;
-  }
-
-  .slider:active {
-    cursor: grabbing;
   }
 
   .slider-action {
@@ -152,15 +197,15 @@ const Container = styled.div`
     align-items: center;
     border: none;
     border-radius: 50%;
-    background: rgba(20, 20, 20, 0.75);
+    background: rgba(20, 20, 20, 0.85);
     color: #fff;
     cursor: pointer;
     z-index: 100000;
     transition:
       background 0.25s ease,
       color 0.25s ease,
-      transform 0.25s ease;
-    touch-action: manipulation;
+      transform 0.25s ease,
+      opacity 0.2s ease;
   }
 
   .slider-action:hover {
@@ -171,11 +216,11 @@ const Container = styled.div`
 
   .slider-action svg {
     font-size: 1.8rem;
-    transition: transform 0.25s ease;
   }
 
-  .slider-action:hover svg {
-    transform: scale(1.15);
+  .hide {
+    opacity: 0;
+    pointer-events: none;
   }
 
   .left {
@@ -186,11 +231,6 @@ const Container = styled.div`
     right: 8px;
   }
 
-  .hide {
-    opacity: 0;
-    pointer-events: none;
-  }
-
   @media (min-width: 1440px) {
     .title {
       font-size: 1.6rem;
@@ -199,21 +239,15 @@ const Container = styled.div`
 
     .slider-container {
       padding: 0.4rem 1.2rem;
-      overflow: visible;
     }
 
     .slider {
       gap: 16px;
-      overflow: visible;
     }
 
     .slider-action {
       width: 54px;
       height: 54px;
-    }
-
-    .slider-action svg {
-      font-size: 1.9rem;
     }
 
     .left {
@@ -231,14 +265,8 @@ const Container = styled.div`
       font-size: 1.3rem;
     }
 
-    .slider-container {
-      padding: 0.3rem 1rem;
-      overflow: visible;
-    }
-
     .slider {
       gap: 12px;
-      overflow: visible;
     }
 
     .slider-action {
@@ -270,13 +298,10 @@ const Container = styled.div`
 
     .slider-container {
       padding: 0.2rem 0.8rem;
-      overflow: visible;
-      touch-action: pan-x;
     }
 
     .slider {
       gap: 10px;
-      overflow: visible;
     }
 
     .slider-action {
@@ -298,8 +323,6 @@ const Container = styled.div`
   }
 
   @media (max-width: 480px) {
-    margin: 0;
-
     .title {
       margin-left: 0.75rem;
       margin-bottom: 0.2rem;
@@ -308,24 +331,15 @@ const Container = styled.div`
 
     .slider-container {
       padding: 0.2rem 0.6rem;
-      overflow: visible;
-      touch-action: pan-x;
-      -webkit-overflow-scrolling: touch;
     }
 
     .slider {
       gap: 8px;
-      cursor: grab;
-      user-select: none;
-      -webkit-user-select: none;
-      touch-action: pan-x;
-      overflow: visible;
     }
 
     .slider-action {
       width: 32px;
       height: 32px;
-      background: rgba(20, 20, 20, 0.8);
     }
 
     .slider-action svg {
@@ -349,12 +363,10 @@ const Container = styled.div`
 
     .slider-container {
       padding: 0.15rem 0.5rem;
-      overflow: visible;
     }
 
     .slider {
       gap: 7px;
-      overflow: visible;
     }
 
     .slider-action {
@@ -374,39 +386,4 @@ const Container = styled.div`
       right: 1px;
     }
   }
-
-  @media (hover: none) and (pointer: coarse) {
-    .slider-action:hover {
-      background: rgba(20, 20, 20, 0.75);
-      color: #fff;
-      transform: translateY(-50%);
-    }
-
-    .slider-action:hover svg {
-      transform: none;
-    }
-
-    .slider {
-      cursor: grab;
-      touch-action: pan-x;
-      user-select: none;
-      -webkit-user-select: none;
-      overflow: visible;
-    }
-
-    .slider:active {
-      cursor: grabbing;
-    }
-
-    .slider-container {
-      overflow: visible;
-    }
-
-    .wrapper {
-      overflow: visible;
-    }
-  }
 `;
-
-
-

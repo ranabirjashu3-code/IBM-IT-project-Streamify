@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useRef, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import styled from "styled-components";
 import video from "../assets/video.mp4";
@@ -21,16 +21,19 @@ export default React.memo(function Card({
   const [showFullOverview, setShowFullOverview] = useState(false);
   const [reaction, setReaction] = useState(null);
   const [reactionLoading, setReactionLoading] = useState(false);
+  const [popupLeft, setPopupLeft] = useState(0);
+
+  const containerRef = useRef(null);
+  const popupRef = useRef(null);
 
   const navigate = useNavigate();
-
   const API_URL = import.meta.env.VITE_API_URL;
 
   const contentId = String(
     movieData?.id ?? movieData?.movieId ?? ""
   );
 
-  // Load the user's saved reaction from the backend
+  // Load the user's saved reaction.
   useEffect(() => {
     let cancelled = false;
 
@@ -46,7 +49,9 @@ export default React.memo(function Card({
 
         try {
           const response = await axios.get(
-            `${API_URL}/api/interactions/${encodeURIComponent(contentId)}`
+            `${API_URL}/api/interactions/${encodeURIComponent(
+              contentId
+            )}`
           );
 
           if (cancelled) return;
@@ -73,7 +78,84 @@ export default React.memo(function Card({
     };
   }, [contentId, API_URL]);
 
-  // Open the video player
+  // Keep the hover popup inside the viewport.
+  useEffect(() => {
+    if (!isHovered) return undefined;
+
+    let animationFrame;
+
+    const updatePopupPosition = () => {
+      cancelAnimationFrame(animationFrame);
+
+      animationFrame = requestAnimationFrame(() => {
+        const container = containerRef.current;
+        const popup = popupRef.current;
+
+        if (!container || !popup) return;
+
+        const cardRect = container.getBoundingClientRect();
+        const scale = container.offsetWidth
+          ? cardRect.width / container.offsetWidth
+          : 1;
+
+        const safeScale = scale || 1;
+        const popupWidth = popup.offsetWidth * safeScale;
+
+        const viewportWidth =
+          document.documentElement.clientWidth ||
+          window.innerWidth;
+
+        const gutter = 12;
+
+        const maxViewportLeft = Math.max(
+          gutter,
+          viewportWidth - popupWidth - gutter
+        );
+
+        // Center the popup above the poster.
+        const centeredLeft =
+          cardRect.left +
+          cardRect.width / 2 -
+          popupWidth / 2;
+
+        // Keep the popup inside the viewport.
+        const viewportLeft = Math.min(
+          Math.max(centeredLeft, gutter),
+          maxViewportLeft
+        );
+
+        // Convert viewport coordinates to the card's coordinates.
+        const localLeft =
+          (viewportLeft - cardRect.left) / safeScale;
+
+        setPopupLeft(localLeft);
+      });
+    };
+
+    updatePopupPosition();
+
+    window.addEventListener("resize", updatePopupPosition);
+    window.addEventListener(
+      "scroll",
+      updatePopupPosition,
+      true
+    );
+
+    return () => {
+      cancelAnimationFrame(animationFrame);
+      window.removeEventListener(
+        "resize",
+        updatePopupPosition
+      );
+      window.removeEventListener(
+        "scroll",
+        updatePopupPosition,
+        true
+      );
+    };
+  }, [isHovered, movieData?.id]);
+
+  // Open the player.
   const handlePlay = () => {
     if (!requireAuth(navigate)) return;
 
@@ -84,7 +166,7 @@ export default React.memo(function Card({
     });
   };
 
-  // Save Like or Dislike to the backend
+  // Save Like or Dislike.
   const handleReaction = async (type, event) => {
     event.stopPropagation();
 
@@ -102,7 +184,9 @@ export default React.memo(function Card({
       setReactionLoading(true);
 
       const response = await axios.post(
-        `${API_URL}/api/interactions/${encodeURIComponent(contentId)}/${type}`,
+        `${API_URL}/api/interactions/${encodeURIComponent(
+          contentId
+        )}/${type}`,
         {
           userId: user.uid,
         }
@@ -123,13 +207,12 @@ export default React.memo(function Card({
     }
   };
 
-  // Add or remove from watchlist
+  // Add or remove the movie from the watchlist.
   const handleWatchlist = async () => {
     try {
       if (!requireAuth(navigate)) return;
 
       const user = firebaseAuth.currentUser;
-
       if (!user) return;
 
       if (isInWatchlist) {
@@ -170,36 +253,41 @@ export default React.memo(function Card({
   };
 
   const overview = movieData?.overview || "";
-  const genres = movieData?.genres || [];
+  const genres = Array.isArray(movieData?.genres)
+    ? movieData.genres
+    : [];
 
   return (
     <Container
+      ref={containerRef}
       onMouseEnter={() => setIsHovered(true)}
       onMouseLeave={() => setIsHovered(false)}
     >
       <img
         className="movie-image"
         src={
-          movieData.image
+          movieData?.image
             ? `https://image.tmdb.org/t/p/w500${movieData.image}`
             : ""
         }
-        alt={movieData.name || "Movie"}
+        alt={movieData?.name || "Movie"}
       />
 
       {isHovered && (
-        <div className="hover">
+        <div
+          ref={popupRef}
+          className="hover"
+          style={{ left: `${popupLeft}px` }}
+        >
           <div className="image-video-container">
-            <img
-              className="hover-image"
-              src={
-                movieData.backdrop
-                  ? `https://image.tmdb.org/t/p/original${movieData.backdrop}`
-                  : ""
-              }
-              alt={movieData.name || "Movie"}
-              onClick={handlePlay}
-            />
+            {movieData?.backdrop && (
+              <img
+                className="hover-image"
+                src={`https://image.tmdb.org/t/p/original${movieData.backdrop}`}
+                alt={movieData?.name || "Movie"}
+                onClick={handlePlay}
+              />
+            )}
 
             <video
               className="hover-video"
@@ -207,6 +295,7 @@ export default React.memo(function Card({
               autoPlay
               muted
               loop
+              playsInline
               onClick={handlePlay}
             />
           </div>
@@ -216,20 +305,23 @@ export default React.memo(function Card({
               className="movie-title"
               onClick={handlePlay}
             >
-              {movieData.name}
+              {movieData?.name || "Untitled"}
             </h3>
 
             <div className="movie-info">
               <span className="match">
-                ⭐ {movieData.rating?.toFixed?.(1) ?? "N/A"}
+                ⭐{" "}
+                {typeof movieData?.rating === "number"
+                  ? movieData.rating.toFixed(1)
+                  : "N/A"}
               </span>
 
               <span className="year">
-                {movieData.releaseDate?.substring(0, 4)}
+                {movieData?.releaseDate?.substring(0, 4)}
               </span>
 
               <span className="lang">
-                {movieData.language?.toUpperCase()}
+                {movieData?.language?.toUpperCase()}
               </span>
             </div>
 
@@ -237,6 +329,7 @@ export default React.memo(function Card({
               <IoPlayCircleSharp
                 className="icon play"
                 title="Play"
+                aria-label="Play"
                 onClick={handlePlay}
               />
 
@@ -253,13 +346,17 @@ export default React.memo(function Card({
                 }
                 style={{
                   opacity: reactionLoading ? 0.5 : 1,
-                  pointerEvents: reactionLoading ? "none" : "auto",
+                  pointerEvents: reactionLoading
+                    ? "none"
+                    : "auto",
                 }}
               />
 
               <RiThumbDownFill
                 className={`icon ${
-                  reaction === "dislike" ? "reaction-active" : ""
+                  reaction === "dislike"
+                    ? "reaction-active"
+                    : ""
                 }`}
                 title="Dislike"
                 role="button"
@@ -270,7 +367,9 @@ export default React.memo(function Card({
                 }
                 style={{
                   opacity: reactionLoading ? 0.5 : 1,
-                  pointerEvents: reactionLoading ? "none" : "auto",
+                  pointerEvents: reactionLoading
+                    ? "none"
+                    : "auto",
                 }}
               />
 
@@ -278,12 +377,14 @@ export default React.memo(function Card({
                 <BsCheck
                   className="icon"
                   title="Remove From List"
+                  aria-label="Remove from watchlist"
                   onClick={handleWatchlist}
                 />
               ) : (
                 <AiOutlinePlus
                   className="icon"
                   title="Add To My List"
+                  aria-label="Add to watchlist"
                   onClick={handleWatchlist}
                 />
               )}
@@ -300,7 +401,7 @@ export default React.memo(function Card({
                 <span
                   className="read-more"
                   onClick={() =>
-                    setShowFullOverview(!showFullOverview)
+                    setShowFullOverview((previous) => !previous)
                   }
                 >
                   {showFullOverview
@@ -310,18 +411,30 @@ export default React.memo(function Card({
               )}
             </p>
 
-            <ul className="genres">
-              {genres.map((genre) => (
-                <li key={genre}>{genre}</li>
-              ))}
-            </ul>
+            {genres.length > 0 && (
+              <ul className="genres">
+                {genres.map((genre, index) => {
+                  const genreName =
+                    typeof genre === "string"
+                      ? genre
+                      : genre?.name;
+
+                  if (!genreName) return null;
+
+                  return (
+                    <li key={`${genreName}-${index}`}>
+                      {genreName}
+                    </li>
+                  );
+                })}
+              </ul>
+            )}
           </div>
         </div>
       )}
     </Container>
   );
 });
-
 
 const Container = styled.div`
   width: 165px;
@@ -333,13 +446,6 @@ const Container = styled.div`
   transition: transform 0.35s ease;
   transform-origin: center center;
 
-  .icon.reaction-active {
-    background: #46d369;
-    color: #111;
-    border-color: #46d369;
-  }
-
-  /* Main movie image */
   .movie-image {
     width: 100%;
     height: 100%;
@@ -348,17 +454,14 @@ const Container = styled.div`
     display: block;
   }
 
-  /* Card hover */
   &:hover {
     transform: scale(1.12);
     z-index: 99999;
   }
 
-  /* Hover popup - fixed positioning */
   .hover {
     position: absolute;
     top: -10px;
-    left: 0;
 
     width: 360px;
     max-width: calc(100vw - 24px);
@@ -370,24 +473,23 @@ const Container = styled.div`
 
     box-shadow: 0 18px 45px rgba(0, 0, 0, 0.85);
 
-    animation: popup 0.25s ease forwards;
+    transform-origin: top left;
+    animation: popup 0.2s ease forwards;
     z-index: 999999;
   }
 
-  /* Popup animation */
   @keyframes popup {
     from {
       opacity: 0;
-      transform: scale(0.96);
+      scale: 0.97;
     }
 
     to {
       opacity: 1;
-      transform: scale(1);
+      scale: 1;
     }
   }
 
-  /* Image / video container */
   .image-video-container {
     width: 100%;
     height: 200px;
@@ -404,30 +506,34 @@ const Container = styled.div`
     display: block;
   }
 
+  .hover-image {
+    position: absolute;
+    inset: 0;
+    cursor: pointer;
+  }
+
   .hover-video {
     position: absolute;
     inset: 0;
+    cursor: pointer;
   }
 
-  /* Movie details */
   .movie-details {
     padding: 1rem;
     box-sizing: border-box;
     min-width: 0;
   }
 
-  /* Movie title */
   .movie-title {
     color: #fff;
     font-size: 1.15rem;
     font-weight: 700;
-    margin-bottom: 0.8rem;
+    margin: 0 0 0.8rem;
     cursor: pointer;
     line-height: 1.3;
     overflow-wrap: anywhere;
   }
 
-  /* Movie information */
   .movie-info {
     display: flex;
     align-items: center;
@@ -447,37 +553,28 @@ const Container = styled.div`
     color: #d2d2d2;
   }
 
-  /* Overview */
   .overview {
     color: #d0d0d0;
     font-size: 0.9rem;
     line-height: 1.5;
-    margin-bottom: 1rem;
+    margin: 0 0 1rem;
     word-break: break-word;
     overflow-wrap: anywhere;
-    transition: all 0.3s ease;
-    display: -webkit-box;
-    -webkit-box-orient: vertical;
-    -webkit-line-clamp: 3;
-    overflow: hidden;
+    display: block;
   }
 
-  /* Read more */
   .read-more {
     color: #46d369;
     font-weight: 600;
     cursor: pointer;
     margin-left: 4px;
-    text-decoration: none;
     transition: color 0.25s ease;
   }
 
   .read-more:hover {
     color: #7ef0a0;
-    text-decoration: none;
   }
 
-  /* Controls */
   .controls {
     display: flex;
     align-items: center;
@@ -486,7 +583,6 @@ const Container = styled.div`
     flex-wrap: wrap;
   }
 
-  /* Icon buttons */
   .icon {
     width: 38px;
     height: 38px;
@@ -496,7 +592,8 @@ const Container = styled.div`
     border: 2px solid rgba(255, 255, 255, 0.35);
     color: white;
     cursor: pointer;
-    transition: all 0.25s ease;
+    transition: background 0.25s ease, color 0.25s ease,
+      border-color 0.25s ease, transform 0.25s ease;
     flex-shrink: 0;
   }
 
@@ -518,7 +615,6 @@ const Container = styled.div`
     border-color: #7ef0a0;
   }
 
-  /* Play button */
   .play {
     background: white;
     color: black;
@@ -529,12 +625,6 @@ const Container = styled.div`
     background: #e5e5e5;
   }
 
-  /* More button */
-  .more {
-    margin-left: auto;
-  }
-
-  /* Genres */
   .genres {
     display: flex;
     flex-wrap: wrap;
@@ -562,7 +652,6 @@ const Container = styled.div`
     display: none;
   }
 
-  /* Large desktop: 1440px+ */
   @media (min-width: 1440px) {
     width: 175px;
     height: 263px;
@@ -580,7 +669,6 @@ const Container = styled.div`
     }
   }
 
-  /* Laptop: up to 1024px */
   @media (max-width: 1024px) {
     width: 150px;
     height: 225px;
@@ -617,7 +705,6 @@ const Container = styled.div`
     }
   }
 
-  /* Tablet: up to 768px */
   @media (max-width: 768px) {
     width: 135px;
     height: 203px;
@@ -625,7 +712,6 @@ const Container = styled.div`
     .hover {
       width: 300px;
       max-width: calc(100vw - 24px);
-      top: -10px;
     }
 
     .image-video-container {
@@ -651,7 +737,6 @@ const Container = styled.div`
     .overview {
       font-size: 0.82rem;
       line-height: 1.4;
-      -webkit-line-clamp: 2;
       margin-bottom: 0.8rem;
     }
 
@@ -679,7 +764,6 @@ const Container = styled.div`
     }
   }
 
-  /* Mobile: 361px–480px */
   @media (max-width: 480px) {
     width: 125px;
     height: 188px;
@@ -687,8 +771,6 @@ const Container = styled.div`
     .hover {
       width: min(280px, calc(100vw - 24px));
       max-width: calc(100vw - 24px);
-      left: 0;
-      top: -10px;
       border-radius: 10px;
     }
 
@@ -715,7 +797,6 @@ const Container = styled.div`
     .overview {
       font-size: 0.78rem;
       line-height: 1.4;
-      -webkit-line-clamp: 2;
       margin-bottom: 0.7rem;
     }
 
@@ -743,7 +824,6 @@ const Container = styled.div`
     }
   }
 
-  /* Small mobile: 320px–360px */
   @media (max-width: 360px) {
     width: 115px;
     height: 173px;
@@ -751,8 +831,6 @@ const Container = styled.div`
     .hover {
       width: min(260px, calc(100vw - 20px));
       max-width: calc(100vw - 20px);
-      left: 0;
-      top: -10px;
     }
 
     .image-video-container {
@@ -797,7 +875,6 @@ const Container = styled.div`
     }
   }
 
-  /* Touch devices */
   @media (hover: none) and (pointer: coarse) {
     &:hover {
       transform: none;
@@ -826,4 +903,3 @@ const Container = styled.div`
     }
   }
 `;
-
