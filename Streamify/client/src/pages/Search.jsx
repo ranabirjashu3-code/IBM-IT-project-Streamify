@@ -24,6 +24,7 @@ export default function Search() {
   const [searchResults, setSearchResults] = useState([]);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
+  const [searchMode, setSearchMode] = useState("tmdb");
 
   // Load movie and TV genres.
   useEffect(() => {
@@ -54,7 +55,7 @@ export default function Search() {
     setSearchInput(query);
   }, [query]);
 
-  // Update the URL as the user types, with a short debounce.
+  // Update the URL as the user types.
   useEffect(() => {
     const timer = setTimeout(() => {
       const value = searchInput.trim();
@@ -76,13 +77,13 @@ export default function Search() {
   // Fetch search results.
   useEffect(() => {
     let cancelled = false;
-
     const activeQuery = searchInput.trim();
 
-    if (!genresLoaded || !activeQuery) {
+    if ((searchMode === "tmdb" && !genresLoaded) || !activeQuery) {
       setSearchResults([]);
       setLoading(false);
       setError("");
+
       return () => {
         cancelled = true;
       };
@@ -93,30 +94,62 @@ export default function Search() {
       setError("");
 
       try {
-        const action = await dispatch(
-          fetchCategory({
-            page: "home",
-            category: "searchResults",
-            endpoint: `/search/multi?query=${encodeURIComponent(
+        let results;
+
+        if (searchMode === "semantic") {
+          const baseUrl = import.meta.env.VITE_API_URI;
+
+          if (!baseUrl) {
+            throw new Error("VITE_API_URI is not configured.");
+          }
+
+          const response = await fetch(
+            `${baseUrl.replace(/\/$/, "")}/api/semantic-search?q=${encodeURIComponent(
               activeQuery
-            )}`,
-            paging: false,
-            maxItems: 20,
-            maxPages: 1,
-          })
-        );
+            )}`
+          );
 
-        if (cancelled) return;
+          if (!response.ok) {
+            throw new Error(
+              `Semantic search failed (${response.status}).`
+            );
+          }
 
-        if (!fetchCategory.fulfilled.match(action)) {
-          throw new Error("Unable to fetch search results.");
+          const semanticMovies = await response.json();
+
+          results = semanticMovies.map((movie) => ({
+            ...movie,
+            id: movie.tmdbId,
+            mediaType: "movie",
+            title: movie.title,
+            poster_path: movie.posterPath ?? movie.poster_path,
+          }));
+        } else {
+          const action = await dispatch(
+            fetchCategory({
+              page: "home",
+              category: "searchResults",
+              endpoint: `/search/multi?query=${encodeURIComponent(
+                activeQuery
+              )}`,
+              paging: false,
+              maxItems: 20,
+              maxPages: 1,
+            })
+          );
+
+          if (!fetchCategory.fulfilled.match(action)) {
+            throw new Error("Unable to fetch search results.");
+          }
+
+          results = (action.payload.data || []).filter(
+            (item) =>
+              item.mediaType === "movie" ||
+              item.mediaType === "tv"
+          );
         }
 
-        const results = (action.payload.data || []).filter(
-          (item) =>
-            item.mediaType === "movie" ||
-            item.mediaType === "tv"
-        );
+        if (cancelled) return;
 
         setSearchResults(results);
       } catch (err) {
@@ -139,7 +172,7 @@ export default function Search() {
     return () => {
       cancelled = true;
     };
-  }, [dispatch, genresLoaded, searchInput]);
+  }, [dispatch, genresLoaded, searchInput, searchMode]);
 
   // Retry search.
   const handleRetry = async () => {
@@ -151,30 +184,62 @@ export default function Search() {
     setError("");
 
     try {
-      const action = await dispatch(
-        fetchCategory({
-          page: "home",
-          category: "searchResults",
-          endpoint: `/search/multi?query=${encodeURIComponent(
+      if (searchMode === "semantic") {
+        const baseUrl = import.meta.env.VITE_API_URI;
+
+        if (!baseUrl) {
+          throw new Error("VITE_API_URI is not configured.");
+        }
+
+        const response = await fetch(
+          `${baseUrl.replace(/\/$/, "")}/api/semantic-search?q=${encodeURIComponent(
             activeQuery
-          )}`,
-          paging: false,
-          maxItems: 20,
-          maxPages: 1,
-        })
-      );
+          )}`
+        );
 
-      if (!fetchCategory.fulfilled.match(action)) {
-        throw new Error("Search request failed.");
+        if (!response.ok) {
+          throw new Error(
+            `Semantic search failed (${response.status}).`
+          );
+        }
+
+        const semanticMovies = await response.json();
+
+        setSearchResults(
+          semanticMovies.map((movie) => ({
+            ...movie,
+            id: movie.tmdbId,
+            mediaType: "movie",
+            title: movie.title,
+            poster_path: movie.posterPath ?? movie.poster_path,
+          }))
+        );
+      } else {
+        const action = await dispatch(
+          fetchCategory({
+            page: "home",
+            category: "searchResults",
+            endpoint: `/search/multi?query=${encodeURIComponent(
+              activeQuery
+            )}`,
+            paging: false,
+            maxItems: 20,
+            maxPages: 1,
+          })
+        );
+
+        if (!fetchCategory.fulfilled.match(action)) {
+          throw new Error("Search request failed.");
+        }
+
+        const results = (action.payload.data || []).filter(
+          (item) =>
+            item.mediaType === "movie" ||
+            item.mediaType === "tv"
+        );
+
+        setSearchResults(results);
       }
-
-      const results = (action.payload.data || []).filter(
-        (item) =>
-          item.mediaType === "movie" ||
-          item.mediaType === "tv"
-      );
-
-      setSearchResults(results);
     } catch (err) {
       console.error("Search retry error:", err);
       setError("Unable to load results. Please try again.");
@@ -184,8 +249,7 @@ export default function Search() {
   };
 
   const activeQuery = searchInput.trim();
-
-  return (
+    return (
     <Container>
       <Navbar isScrolled={isScrolled} />
 
@@ -207,7 +271,7 @@ export default function Search() {
             starts here.
           </p>
 
-          {/* Search input on the Search page */}
+          {/* Search input */}
           <div className="page-search-box">
             <FaSearch />
 
@@ -231,6 +295,25 @@ export default function Search() {
             )}
           </div>
 
+          {/* Search mode selector */}
+          <div className="search-mode">
+            <button
+              type="button"
+              className={searchMode === "tmdb" ? "active" : ""}
+              onClick={() => setSearchMode("tmdb")}
+            >
+              Title Search
+            </button>
+
+            <button
+              type="button"
+              className={searchMode === "semantic" ? "active" : ""}
+              onClick={() => setSearchMode("semantic")}
+            >
+              AI Semantic Search
+            </button>
+          </div>
+
           {activeQuery && (
             <div className="query-card">
               <div className="query-icon">
@@ -239,7 +322,9 @@ export default function Search() {
 
               <div className="query-details">
                 <span className="query-label">
-                  SEARCH RESULTS FOR
+                  {searchMode === "semantic"
+                    ? "AI SEARCH RESULTS FOR"
+                    : "SEARCH RESULTS FOR"}
                 </span>
 
                 <h2>{activeQuery}</h2>
@@ -269,8 +354,8 @@ export default function Search() {
               <h2>What are you looking for?</h2>
 
               <p>
-                Enter a movie or TV show title in the search
-                bar above to discover matching results.
+                Enter a movie or TV show title in the search bar
+                above to discover matching results.
               </p>
             </EmptyState>
           )}
@@ -326,9 +411,8 @@ export default function Search() {
                 <h2>No titles found</h2>
 
                 <p>
-                  We couldn't find anything matching "
-                  {activeQuery}". Try another title or check
-                  your spelling.
+                  We couldn't find anything matching "{activeQuery}".
+                  Try another search.
                 </p>
               </EmptyState>
             )}
@@ -341,10 +425,16 @@ export default function Search() {
                 <div className="section-heading">
                   <div>
                     <span className="section-label">
-                      YOUR DISCOVERIES
+                      {searchMode === "semantic"
+                        ? "AI RECOMMENDATIONS"
+                        : "YOUR DISCOVERIES"}
                     </span>
 
-                    <h2>Matching titles</h2>
+                    <h2>
+                      {searchMode === "semantic"
+                        ? "Movies with similar meaning"
+                        : "Matching titles"}
+                    </h2>
                   </div>
 
                   <span className="total-count">
@@ -383,7 +473,6 @@ const Container = styled.div`
     #0b0b0f;
   color: #fff;
 
-  /* MAIN PAGE */
   .search-page {
     width: min(1600px, 100%);
     margin: 0 auto;
@@ -392,7 +481,6 @@ const Container = styled.div`
     box-sizing: border-box;
   }
 
-  /* HEADER */
   .search-header {
     margin-bottom: 20px;
   }
@@ -434,7 +522,6 @@ const Container = styled.div`
     line-height: 1.5;
   }
 
-  /* SEARCH INPUT */
   .page-search-box {
     display: flex;
     align-items: center;
@@ -497,7 +584,37 @@ const Container = styled.div`
     color: #fff;
   }
 
-  /* SEARCH SUMMARY */
+  /* Search mode buttons */
+  .search-mode {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 10px;
+    margin-top: 12px;
+  }
+
+  .search-mode button {
+    padding: 9px 15px;
+    border: 1px solid rgba(255, 255, 255, 0.14);
+    border-radius: 8px;
+    background: rgba(255, 255, 255, 0.04);
+    color: #a1a1aa;
+    font-size: 12px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.2s ease;
+  }
+
+  .search-mode button:hover {
+    border-color: rgba(34, 197, 94, 0.5);
+    color: #fff;
+  }
+
+  .search-mode button.active {
+    border-color: #22c55e;
+    background: rgba(34, 197, 94, 0.12);
+    color: #22c55e;
+  }
+
   .query-card {
     display: flex;
     align-items: center;
@@ -557,7 +674,6 @@ const Container = styled.div`
     font-size: 21px;
   }
 
-  /* RESULTS SECTION */
   .results-section {
     width: 100%;
     min-height: 0;
@@ -584,7 +700,6 @@ const Container = styled.div`
     font-size: 12px;
   }
 
-  /* MOVIE AND TV GRID */
   .results-grid {
     display: grid;
     grid-template-columns: repeat(5, minmax(0, 1fr));
@@ -606,7 +721,6 @@ const Container = styled.div`
     max-width: 100%;
   }
 
-  /* LOADING SKELETONS */
   .skeleton-grid {
     justify-items: stretch;
   }
@@ -655,7 +769,6 @@ const Container = styled.div`
     animation: pulse 1s infinite alternate;
   }
 
-  /* RETRY BUTTON */
   .retry-button {
     display: inline-flex;
     align-items: center;
@@ -677,11 +790,11 @@ const Container = styled.div`
     background: #16a34a;
   }
 
-  /* ANIMATIONS */
   @keyframes shimmer {
     from {
       background-position: 100% 0;
     }
+
     to {
       background-position: -100% 0;
     }
@@ -691,12 +804,12 @@ const Container = styled.div`
     from {
       opacity: 0.35;
     }
+
     to {
       opacity: 1;
     }
   }
 
-  /* TABLET */
   @media (max-width: 1100px) {
     .results-grid {
       grid-template-columns: repeat(4, minmax(0, 1fr));
@@ -704,7 +817,6 @@ const Container = styled.div`
     }
   }
 
-  /* SMALL TABLET */
   @media (max-width: 750px) {
     .search-page {
       padding: 78px 4% 45px;
@@ -728,7 +840,6 @@ const Container = styled.div`
     }
   }
 
-  /* PHONE */
   @media (max-width: 480px) {
     .search-page {
       padding: 75px 4% 45px;
@@ -807,7 +918,6 @@ const Container = styled.div`
     }
   }
 
-  /* VERY SMALL PHONE */
   @media (max-width: 360px) {
     .search-header h1 {
       font-size: 29px;
@@ -832,7 +942,6 @@ const Container = styled.div`
     }
   }
 
-  /* REDUCED MOTION */
   @media (prefers-reduced-motion: reduce) {
     .skeleton-poster,
     .skeleton-line,
