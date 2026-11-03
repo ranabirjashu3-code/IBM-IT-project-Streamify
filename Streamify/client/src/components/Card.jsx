@@ -268,7 +268,7 @@ export default React.memo(function Card({
         src={
           movieData?.image
             ? `https://image.tmdb.org/t/p/w500${movieData.image}`
-            : ""
+            : null
         }
         alt={movieData?.name || "Movie"}
       />
@@ -334,9 +334,8 @@ export default React.memo(function Card({
               />
 
               <RiThumbUpFill
-                className={`icon ${
-                  reaction === "like" ? "reaction-active" : ""
-                }`}
+                className={`icon ${reaction === "like" ? "reaction-active" : ""
+                  }`}
                 title="Like"
                 role="button"
                 aria-label="Like"
@@ -353,11 +352,10 @@ export default React.memo(function Card({
               />
 
               <RiThumbDownFill
-                className={`icon ${
-                  reaction === "dislike"
+                className={`icon ${reaction === "dislike"
                     ? "reaction-active"
                     : ""
-                }`}
+                  }`}
                 title="Dislike"
                 role="button"
                 aria-label="Dislike"

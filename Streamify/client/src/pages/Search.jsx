@@ -1,3 +1,4 @@
+
 import React, { useEffect, useState } from "react";
 import { useSearchParams } from "react-router-dom";
 import { useDispatch, useSelector } from "react-redux";
@@ -97,10 +98,10 @@ export default function Search() {
         let results;
 
         if (searchMode === "semantic") {
-          const baseUrl = import.meta.env.VITE_API_URI;
+          const baseUrl = import.meta.env.VITE_API_URL;
 
           if (!baseUrl) {
-            throw new Error("VITE_API_URI is not configured.");
+            throw new Error("VITE_API_URL is not configured.");
           }
 
           const response = await fetch(
