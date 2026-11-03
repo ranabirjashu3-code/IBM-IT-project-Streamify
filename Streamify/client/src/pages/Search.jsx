@@ -1,4 +1,3 @@
-
 import React, { useEffect, useState } from "react";
 import { useSearchParams } from "react-router-dom";
 import { useDispatch, useSelector } from "react-redux";
@@ -88,133 +87,64 @@ export default function Search() {
     return () => clearTimeout(timer);
   }, [searchInput]);
 
-  // Fetch search results.
-  useEffect(() => {
-    let cancelled = false;
+  // Normalize semantic results for the existing Card component.
+  const normalizeSemanticMovies = (movies) => {
+    return movies.map((movie) => ({
+      ...movie,
 
-    const activeQuery = debouncedSearchInput.trim();
+      id: movie.tmdbId ?? movie.id,
+      mediaType: "movie",
 
-    if ((searchMode === "tmdb" && !genresLoaded) || !activeQuery) {
+      // Card.jsx expects these fields.
+      name: movie.name ?? movie.title ?? "Untitled",
+      image:
+        movie.image ??
+        movie.posterPath ??
+        movie.poster_path ??
+        null,
+      backdrop:
+        movie.backdrop ??
+        movie.backdropPath ??
+        movie.backdrop_path ??
+        null,
+
+      overview: movie.overview || "",
+      rating: movie.rating ?? movie.vote_average,
+      releaseDate:
+        movie.releaseDate ?? movie.release_date,
+      genres: movie.genres || [],
+    }));
+  };
+
+  // Shared search function used by initial search and retry.
+  const performSearch = async (searchQuery) => {
+    const activeQuery = searchQuery.trim();
+
+    if (!activeQuery) {
       setSearchResults([]);
       setLoading(false);
       setError("");
-
-      return () => {
-        cancelled = true;
-      };
+      return;
     }
-
-    const searchMovies = async () => {
-      setLoading(true);
-      setError("");
-
-      try {
-        let results;
-
-        if (searchMode === "semantic") {
-          const semanticMovies =
-            await searchMoviesSemantically(activeQuery);
-
-          results = semanticMovies.map((movie) => ({
-            ...movie,
-            id: movie.tmdbId ?? movie.id,
-            mediaType: "movie",
-            title: movie.title ?? movie.name,
-            poster_path:
-              movie.posterPath ?? movie.poster_path ?? null,
-            backdrop_path:
-              movie.backdropPath ?? movie.backdrop_path ?? null,
-            vote_average:
-              movie.rating ?? movie.vote_average,
-            release_date:
-              movie.releaseDate ?? movie.release_date,
-          }));
-        } else {
-          const action = await dispatch(
-            fetchCategory({
-              page: "home",
-              category: "searchResults",
-              endpoint: `/search/multi?query=${encodeURIComponent(
-                activeQuery
-              )}`,
-              paging: false,
-              maxItems: 20,
-              maxPages: 1,
-            })
-          );
-
-          if (!fetchCategory.fulfilled.match(action)) {
-            throw new Error("Unable to fetch search results.");
-          }
-
-          results = (action.payload.data || []).filter(
-            (item) =>
-              item.mediaType === "movie" ||
-              item.mediaType === "tv"
-          );
-        }
-
-        if (cancelled) return;
-
-        setSearchResults(results);
-      } catch (err) {
-        if (!cancelled) {
-          console.error("Search error:", err);
-          setSearchResults([]);
-          setError(
-            "Unable to load search results. Please try again."
-          );
-        }
-      } finally {
-        if (!cancelled) {
-          setLoading(false);
-        }
-      }
-    };
-
-    searchMovies();
-
-    return () => {
-      cancelled = true;
-    };
-  }, [
-    dispatch,
-    genresLoaded,
-    debouncedSearchInput,
-    searchMode,
-  ]);
-
-  // Retry search.
-  const handleRetry = async () => {
-    const activeQuery = searchInput.trim();
-
-    if (!activeQuery) return;
 
     setLoading(true);
     setError("");
 
     try {
-      let results;
+      let results = [];
 
       if (searchMode === "semantic") {
         const semanticMovies =
           await searchMoviesSemantically(activeQuery);
 
-        results = semanticMovies.map((movie) => ({
-          ...movie,
-          id: movie.tmdbId ?? movie.id,
-          mediaType: "movie",
-          title: movie.title ?? movie.name,
-          poster_path:
-            movie.posterPath ?? movie.poster_path ?? null,
-          backdrop_path:
-            movie.backdropPath ?? movie.backdrop_path ?? null,
-          vote_average:
-            movie.rating ?? movie.vote_average,
-          release_date:
-            movie.releaseDate ?? movie.release_date,
-        }));
+        results = normalizeSemanticMovies(semanticMovies);
       } else {
+        if (!genresLoaded) {
+          setSearchResults([]);
+          setLoading(false);
+          return;
+        }
+
         const action = await dispatch(
           fetchCategory({
             page: "home",
@@ -229,7 +159,7 @@ export default function Search() {
         );
 
         if (!fetchCategory.fulfilled.match(action)) {
-          throw new Error("Search request failed.");
+          throw new Error("Unable to fetch search results.");
         }
 
         results = (action.payload.data || []).filter(
@@ -241,12 +171,38 @@ export default function Search() {
 
       setSearchResults(results);
     } catch (err) {
-      console.error("Search retry error:", err);
+      console.error("Search error:", err);
       setSearchResults([]);
-      setError("Unable to load results. Please try again.");
+      setError(
+        "Unable to load search results. Please try again."
+      );
     } finally {
       setLoading(false);
     }
+  };
+
+  // Fetch search results after debounce.
+  useEffect(() => {
+    const activeQuery = debouncedSearchInput.trim();
+
+    if (searchMode === "tmdb" && !genresLoaded) {
+      setSearchResults([]);
+      setLoading(false);
+      setError("");
+      return;
+    }
+
+    performSearch(activeQuery);
+  }, [
+    debouncedSearchInput,
+    searchMode,
+    genresLoaded,
+    dispatch,
+  ]);
+
+  // Retry search.
+  const handleRetry = () => {
+    performSearch(searchInput);
   };
 
   const activeQuery = searchInput.trim();

@@ -2,9 +2,9 @@ import tmdb from "./tmdb.js";
 import { generateEmbedding } from "./embeddingService.js";
 import { cosineSimilarity } from "./semanticSimilarity.js";
 import { getOrCreateMovieEmbedding } from "./cacheMovieEmbedding.js";
+import SemanticMovie from "../models/SemanticMovie.js";
 
 // Fetch candidate movies dynamically from TMDB
-// Fetch a broader candidate pool from TMDB
 const fetchCandidateMovies = async () => {
   try {
     const requests = [
@@ -40,14 +40,12 @@ const fetchCandidateMovies = async () => {
       (response) => response.data.results || []
     );
 
-    // Remove duplicate movies by TMDB ID
-    const uniqueMovies = [
+    // Remove duplicates by TMDB ID
+    return [
       ...new Map(
         movies.map((movie) => [movie.id, movie])
       ).values(),
     ];
-
-    return uniqueMovies;
   } catch (error) {
     console.error(
       "TMDB candidate retrieval error:",
@@ -58,25 +56,69 @@ const fetchCandidateMovies = async () => {
   }
 };
 
-// Perform semantic ranking
+// Search MongoDB for exact or partial title matches
+const fetchTitleMatches = async (query) => {
+  try {
+    const matches = await SemanticMovie.find({
+      title: {
+        $regex: query.trim().replace(/[.*+?^${}()|[\]\\]/g, "\\$&"),
+        $options: "i",
+      },
+    })
+      .limit(10)
+      .lean();
+
+    // Convert MongoDB documents to TMDB-like movie objects
+    return matches.map((movie) => ({
+      id: movie.tmdbId,
+      tmdbId: movie.tmdbId,
+      title: movie.title,
+      overview: movie.overview,
+      poster_path: movie.posterPath,
+      backdrop_path: movie.backdropPath,
+      release_date: movie.releaseDate,
+      vote_average: movie.rating,
+      genre_ids: movie.genres || [],
+    }));
+  } catch (error) {
+    console.error("MongoDB title search error:", error.message);
+    throw error;
+  }
+};
+
+// Perform hybrid search
 export const discoverMovies = async (query) => {
   if (!query?.trim()) {
     return [];
   }
 
   try {
-    // 1. Fetch candidate movies from TMDB
-    const movies = await fetchCandidateMovies();
+    const cleanQuery = query.trim();
 
-    // 2. Generate embedding for the user's query
-    const queryEmbedding = await generateEmbedding(query.trim());
+    // 1. Search MongoDB for exact/partial title matches
+    const titleMatches = await fetchTitleMatches(cleanQuery);
 
-    // 3. Get cached movie embeddings and calculate similarity
+    // 2. Fetch candidate movies dynamically from TMDB
+    const tmdbMovies = await fetchCandidateMovies();
+
+    // 3. Merge title matches and TMDB candidates
+    const combinedMovies = [
+      ...new Map(
+        [...titleMatches, ...tmdbMovies].map((movie) => [
+          movie.id ?? movie.tmdbId,
+          movie,
+        ])
+      ).values(),
+    ];
+
+    // 4. Generate embedding for the user's query
+    const queryEmbedding = await generateEmbedding(cleanQuery);
+
+    // 5. Generate/reuse movie embeddings and calculate similarity
     const scoredMovies = await Promise.all(
-      movies
+      combinedMovies
         .filter((movie) => movie.overview?.trim())
         .map(async (movie) => {
-          // Reuse MongoDB embedding or create it if missing
           const movieEmbedding =
             await getOrCreateMovieEmbedding(movie);
 
@@ -85,45 +127,66 @@ export const discoverMovies = async (query) => {
             movieEmbedding
           );
 
+          // Check whether the movie title matches the query
+          const titleMatchesQuery = movie.title
+            ?.toLowerCase()
+            .includes(cleanQuery.toLowerCase());
+
           return {
-            id: movie.id,
-            tmdbId: movie.id,
+            id: movie.id ?? movie.tmdbId,
+            tmdbId: movie.id ?? movie.tmdbId,
             title: movie.title,
             overview: movie.overview,
-            posterPath: movie.poster_path,
-            backdropPath: movie.backdrop_path,
-            releaseDate: movie.release_date,
-            rating: movie.vote_average,
-            genres: movie.genre_ids || [],
-            score,
+            posterPath:
+              movie.poster_path ?? movie.posterPath,
+            backdropPath:
+              movie.backdrop_path ?? movie.backdropPath,
+            releaseDate:
+              movie.release_date ?? movie.releaseDate,
+            rating:
+              movie.vote_average ?? movie.rating,
+            genres:
+              movie.genre_ids ?? movie.genres ?? [],
+            score: Number.isFinite(score) ? score : 0,
+            titleMatchesQuery,
           };
         })
     );
 
-    // 4. Sort by semantic similarity
-    scoredMovies.sort((a, b) => b.score - a.score);
+    // 6. Prioritize title matches, then semantic similarity
+    scoredMovies.sort((a, b) => {
+      if (a.titleMatchesQuery && !b.titleMatchesQuery) {
+        return -1;
+      }
 
-    // 5. Remove duplicates and invalid similarity scores
+      if (!a.titleMatchesQuery && b.titleMatchesQuery) {
+        return 1;
+      }
+
+      return b.score - a.score;
+    });
+
+    // 7. Remove duplicates
     const uniqueMovies = [
       ...new Map(
         scoredMovies.map((movie) => [movie.tmdbId, movie])
       ).values(),
     ];
 
-    // 6. Filter out weak or invalid matches
+    // 8. Keep exact title matches or sufficiently relevant semantic matches
     const MIN_SIMILARITY = 0.30;
 
     const relevantMovies = uniqueMovies.filter(
       (movie) =>
-        Number.isFinite(movie.score) &&
+        movie.titleMatchesQuery ||
         movie.score >= MIN_SIMILARITY
     );
 
-    // 7. Return the top 10 relevant matches
+    // 9. Return the top 10 results
     return relevantMovies.slice(0, 10);
   } catch (error) {
     console.error(
-      "Dynamic semantic search error:",
+      "Dynamic hybrid search error:",
       error.response?.data || error.message
     );
 
