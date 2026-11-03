@@ -9,6 +9,7 @@ import Navbar from "../components/Navbar";
 import Footer from "../components/Footer";
 import Card from "../components/Card";
 import { getGenres, fetchCategory } from "../store";
+import { searchMoviesSemantically } from "../services/semanticSearch";
 
 export default function Search() {
   const [searchParams, setSearchParams] = useSearchParams();
@@ -22,6 +23,9 @@ export default function Search() {
 
   const [isScrolled, setIsScrolled] = useState(false);
   const [searchInput, setSearchInput] = useState(query);
+  const [debouncedSearchInput, setDebouncedSearchInput] =
+    useState(query);
+
   const [searchResults, setSearchResults] = useState([]);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
@@ -75,10 +79,20 @@ export default function Search() {
     return () => clearTimeout(timer);
   }, [searchInput, searchParams, setSearchParams]);
 
+  // Debounce search requests.
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      setDebouncedSearchInput(searchInput);
+    }, 500);
+
+    return () => clearTimeout(timer);
+  }, [searchInput]);
+
   // Fetch search results.
   useEffect(() => {
     let cancelled = false;
-    const activeQuery = searchInput.trim();
+
+    const activeQuery = debouncedSearchInput.trim();
 
     if ((searchMode === "tmdb" && !genresLoaded) || !activeQuery) {
       setSearchResults([]);
@@ -98,32 +112,22 @@ export default function Search() {
         let results;
 
         if (searchMode === "semantic") {
-          const baseUrl = import.meta.env.VITE_API_URL;
-
-          if (!baseUrl) {
-            throw new Error("VITE_API_URL is not configured.");
-          }
-
-          const response = await fetch(
-            `${baseUrl.replace(/\/$/, "")}/api/semantic-search?q=${encodeURIComponent(
-              activeQuery
-            )}`
-          );
-
-          if (!response.ok) {
-            throw new Error(
-              `Semantic search failed (${response.status}).`
-            );
-          }
-
-          const semanticMovies = await response.json();
+          const semanticMovies =
+            await searchMoviesSemantically(activeQuery);
 
           results = semanticMovies.map((movie) => ({
             ...movie,
-            id: movie.tmdbId,
+            id: movie.tmdbId ?? movie.id,
             mediaType: "movie",
-            title: movie.title,
-            poster_path: movie.posterPath ?? movie.poster_path,
+            title: movie.title ?? movie.name,
+            poster_path:
+              movie.posterPath ?? movie.poster_path ?? null,
+            backdrop_path:
+              movie.backdropPath ?? movie.backdrop_path ?? null,
+            vote_average:
+              movie.rating ?? movie.vote_average,
+            release_date:
+              movie.releaseDate ?? movie.release_date,
           }));
         } else {
           const action = await dispatch(
@@ -173,7 +177,12 @@ export default function Search() {
     return () => {
       cancelled = true;
     };
-  }, [dispatch, genresLoaded, searchInput, searchMode]);
+  }, [
+    dispatch,
+    genresLoaded,
+    debouncedSearchInput,
+    searchMode,
+  ]);
 
   // Retry search.
   const handleRetry = async () => {
@@ -185,36 +194,26 @@ export default function Search() {
     setError("");
 
     try {
+      let results;
+
       if (searchMode === "semantic") {
-        const baseUrl = import.meta.env.VITE_API_URI;
+        const semanticMovies =
+          await searchMoviesSemantically(activeQuery);
 
-        if (!baseUrl) {
-          throw new Error("VITE_API_URI is not configured.");
-        }
-
-        const response = await fetch(
-          `${baseUrl.replace(/\/$/, "")}/api/semantic-search?q=${encodeURIComponent(
-            activeQuery
-          )}`
-        );
-
-        if (!response.ok) {
-          throw new Error(
-            `Semantic search failed (${response.status}).`
-          );
-        }
-
-        const semanticMovies = await response.json();
-
-        setSearchResults(
-          semanticMovies.map((movie) => ({
-            ...movie,
-            id: movie.tmdbId,
-            mediaType: "movie",
-            title: movie.title,
-            poster_path: movie.posterPath ?? movie.poster_path,
-          }))
-        );
+        results = semanticMovies.map((movie) => ({
+          ...movie,
+          id: movie.tmdbId ?? movie.id,
+          mediaType: "movie",
+          title: movie.title ?? movie.name,
+          poster_path:
+            movie.posterPath ?? movie.poster_path ?? null,
+          backdrop_path:
+            movie.backdropPath ?? movie.backdrop_path ?? null,
+          vote_average:
+            movie.rating ?? movie.vote_average,
+          release_date:
+            movie.releaseDate ?? movie.release_date,
+        }));
       } else {
         const action = await dispatch(
           fetchCategory({
@@ -233,16 +232,17 @@ export default function Search() {
           throw new Error("Search request failed.");
         }
 
-        const results = (action.payload.data || []).filter(
+        results = (action.payload.data || []).filter(
           (item) =>
             item.mediaType === "movie" ||
             item.mediaType === "tv"
         );
-
-        setSearchResults(results);
       }
+
+      setSearchResults(results);
     } catch (err) {
       console.error("Search retry error:", err);
+      setSearchResults([]);
       setError("Unable to load results. Please try again.");
     } finally {
       setLoading(false);
@@ -250,7 +250,8 @@ export default function Search() {
   };
 
   const activeQuery = searchInput.trim();
-    return (
+
+  return (
     <Container>
       <Navbar isScrolled={isScrolled} />
 
@@ -278,7 +279,11 @@ export default function Search() {
 
             <input
               type="search"
-              placeholder="Search movies and TV shows..."
+              placeholder={
+                searchMode === "semantic"
+                  ? "Describe the movie you're looking for..."
+                  : "Search movies and TV shows..."
+              }
               value={searchInput}
               onChange={(e) => setSearchInput(e.target.value)}
               aria-label="Search movies and TV shows"
@@ -308,7 +313,9 @@ export default function Search() {
 
             <button
               type="button"
-              className={searchMode === "semantic" ? "active" : ""}
+              className={
+                searchMode === "semantic" ? "active" : ""
+              }
               onClick={() => setSearchMode("semantic")}
             >
               AI Semantic Search
@@ -352,11 +359,16 @@ export default function Search() {
                 <FaSearch />
               </div>
 
-              <h2>What are you looking for?</h2>
+              <h2>
+                {searchMode === "semantic"
+                  ? "Describe what you want to watch"
+                  : "What are you looking for?"}
+              </h2>
 
               <p>
-                Enter a movie or TV show title in the search bar
-                above to discover matching results.
+                {searchMode === "semantic"
+                  ? "Try a description like 'movies about dreams and reality' or 'a robot that becomes human'."
+                  : "Enter a movie or TV show title in the search bar above to discover matching results."}
               </p>
             </EmptyState>
           )}
@@ -364,7 +376,12 @@ export default function Search() {
           {activeQuery && loading && (
             <>
               <div className="section-heading">
-                <h2>Finding your next watch</h2>
+                <h2>
+                  {searchMode === "semantic"
+                    ? "Understanding your search"
+                    : "Finding your next watch"}
+                </h2>
+
                 <span className="loading-dot" />
               </div>
 
@@ -409,11 +426,16 @@ export default function Search() {
                   <FaFilm />
                 </div>
 
-                <h2>No titles found</h2>
+                <h2>
+                  {searchMode === "semantic"
+                    ? "No relevant movies found"
+                    : "No titles found"}
+                </h2>
 
                 <p>
-                  We couldn't find anything matching "{activeQuery}".
-                  Try another search.
+                  {searchMode === "semantic"
+                    ? `We couldn't find movies related to "${activeQuery}". Try describing the story, theme, or characters differently.`
+                    : `We couldn't find anything matching "${activeQuery}". Try another search.`}
                 </p>
               </EmptyState>
             )}
@@ -462,6 +484,7 @@ export default function Search() {
     </Container>
   );
 }
+
 
 const Container = styled.div`
   min-height: 100vh;
