@@ -32,6 +32,11 @@ const semanticMovieSchema = new mongoose.Schema({
     type: [Number],
     required: true,
   },
+
+  cast: {
+  type: [String],
+  default: [],
+},
 });
 
 const SemanticMovie = mongoose.model(
